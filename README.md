@@ -1,2 +1,2 @@
 # reservas-web
-Repositório para desenvolvimento de infraestrutura de reserva de laboratórios
+Repositório para desenvolvimento de infraestrutura de reserva de laboratórios de unidades de ensino universitárias. 

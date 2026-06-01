@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRL - Painel Administrativo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .bg-estacio-azul { background-color: #0066cc; }
+        .text-estacio-azul { color: #0066cc; }
+        .border-estacio-azul { border-color: #0066cc; }
+        .hover-estacio-azul:hover { background-color: #0052a3; }
+        
+        /* Na tela normal do computador/celular, esconde as folhas de relatório de forma limpa */
+        #print-report-area, #print-balanco-area { display: none; }
+
+        @media print {
+            /* Oculta de forma estrita todo o conteúdo do painel administrativo */
+            body * { display: none !important; }
+            
+            /* Exibe o container da Agenda de Reservas de forma estruturada */
+            #print-report-area.imprimir-agenda-ativa { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+            #print-report-area.imprimir-agenda-ativa * { display: revert !important; }
+            #print-report-area table { width: 100% !important; border-collapse: collapse !important; display: table !important; }
+            #print-report-area tr { display: table-row !important; }
+            #print-report-area th, #print-report-area td { display: table-cell !important; }
+
+            /* Exibe o container do Balanço Geral de forma estruturada */
+            #print-balanco-area.imprimir-balanco-ativo { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+            #print-balanco-area.imprimir-balanco-ativo * { display: revert !important; }
+            #print-balanco-area table { width: 100% !important; border-collapse: collapse !important; display: table !important; }
+            #print-balanco-area tr { display: table-row !important; }
+            #print-balanco-area th, #print-balanco-area td { display: table-cell !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen pb-12">
+
+    <header class="bg-white shadow-sm border-b border-gray-200 no-print">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-teal-400 to-blue-600 transform rotate-45 flex items-center justify-center">
+                    <div class="w-4 h-4 bg-white transform -rotate-45 opacity-40"></div>
+                </div>
+                <div>
+                    <span class="font-bold text-gray-800 block leading-tight">SRL - Sistema de Reserva de Laboratórios</span>
+                    <span class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Estácio Carapicuíba</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-xs text-gray-600 hidden sm:inline">Painel: <strong>Administrador</strong></span>
+                <button onclick="abrirModalSenhaAdmin()" class="text-gray-500 hover:text-blue-600 transition text-sm cursor-pointer" title="Alterar Senha">
+                    <i class="fa-solid fa-gear"></i> Alterar Senha
+                </button>
+                <button onclick="efetuarLogoutAdmin()" class="text-gray-500 hover:text-red-600 transition text-sm cursor-pointer flex items-center gap-1">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-6 space-y-6 no-print">
+        
+    <section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 text-left flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="space-y-2 w-full">
+                    <h3 class="font-bold text-gray-800">Agenda de Reservas</h3>
+                    <p class="text-xs text-gray-500">Selecione uma data para imprimir as reservas:</p>
+                    <input type="date" id="filtro-data-relatorio" class="border border-gray-300 rounded p-1.5 text-xs w-full sm:w-auto bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+                <button onclick="imprimirRelatorioDiario()" class="p-3.5 bg-blue-50 text-estacio-azul hover:bg-blue-100 transition rounded-md text-xl cursor-pointer self-end sm:self-center" title="Gerar Relatório">
+                    <i class="fa-solid fa-print"></i>
+                </button>
+            </div>
+
+            <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 text-left flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-gray-800">Status Geral por Período</h3>
+                    <p class="text-xs text-gray-500 mt-1">Percentuais calculados dinamicamente com base nas reservas.</p>
+                </div>
+                <div class="p-3 bg-teal-50 text-teal-600 rounded-md text-xl">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+            </div>
+        </section>
+        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-simple text-estacio-azul"></i> Balanço de Utilização dos Laboratórios
+                </h2>
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <input type="date" id="balanco-data-inicio" onchange="renderizarBalanco()" class="border border-gray-300 rounded p-1 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <span class="text-xs text-gray-400">até</span>
+                    <input type="date" id="balanco-data-fim" onchange="renderizarBalanco()" class="border border-gray-300 rounded p-1 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <button onclick="imprimirBalancoGeral()" class="text-xs font-semibold text-gray-600 bg-white border border-gray-300 px-2.5 py-1.5 rounded hover:bg-gray-50 cursor-pointer flex items-center gap-1 shadow-2xs">
+                        <i class="fa-solid fa-print text-estacio-azul"></i> Imprimir Balanço
+                    </button>
+                </div>
+            </div>
+            
+            <div id="grid-balanco" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="space-y-6 lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 h-fit">
+                    <h3 class="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider">Novo Laboratório</h3>
+                    <form id="form-add-lab" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Nome do Laboratório</label>
+                            <input type="text" id="novo-lab-nome" placeholder="Ex: Lab 15 (Informática)" required
+                                class="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button type="submit" class="w-full bg-estacio-azul text-white py-2 rounded-md font-semibold hover-estacio-azul transition text-xs shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-plus"></i> Adicionar Espaço
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 h-fit">
+                    <h3 class="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-plus text-estacio-azul text-xs"></i> Cadastrar Docente
+                    </h3>
+                    <form id="form-add-docente" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-0.5">Nome Completo</label>
+                            <input type="text" id="docente-nome" placeholder="Ex: Profa. Juliana Mendes" required
+                                class="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-0.5">E-mail Corporativo</label>
+                            <input type="email" id="docente-email" placeholder="juliana.mendes@estacio.br" required
+                                class="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-0.5">Senha de Acesso Inicial</label>
+                            <input type="password" id="docente-senha" minlength="8" placeholder="Mínimo 8 caracteres" required
+                                class="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded-md font-semibold hover:bg-teal-700 transition text-xs shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-user-check"></i> Registrar Docente
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 lg:col-span-2">
+                <h3 class="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider">Laboratórios Cadastrados</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200 text-gray-400 text-xs font-bold uppercase">
+                                <th class="py-2">Nome do Espaço</th>
+                                <th class="py-2 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-labs-body" class="text-gray-700 divide-y divide-gray-100">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+    <div id="modal-senha-admin" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-key text-estacio-azul"></i> Atualizar Senha
+            </h3>
+            <p class="text-xs text-gray-500 mb-4">A nova senha master deve conter no mínimo 8 caracteres.</p>
+            
+            <form id="form-alterar-senha-admin" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nova Senha</label>
+                    <div class="relative">
+                        <input type="password" id="admin-senha-input" required minlength="8" class="w-full border border-gray-300 rounded-md p-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite a nova senha">
+                        <button type="button" onclick="alternarVisibilidadeSenhaAdmin()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer text-xs">
+                            <i id="icone-olho-admin" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="fecharModalSenhaAdmin()" class="w-1/2 bg-gray-100 text-gray-700 py-2 rounded-md font-medium hover:bg-gray-200 transition text-sm cursor-pointer">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="w-1/2 bg-estacio-azul text-white py-2 rounded-md font-medium hover-estacio-azul transition text-sm shadow-md cursor-pointer">
+                        Salvar Nova Senha
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="print-report-area" class="p-4 bg-white text-black font-sans">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="font-size: 24px; font-weight: bold; text-transform: uppercase; color: #1f2937;">Relatório de Agendamentos Diários</h1>
+            <p style="font-size: 14px; color: #6b7280; font-weight: 500; margin-top: 2px;">Faculdade Estácio Carapicuíba — SRL</p>
+            <p style="font-size: 13px; color: #374151; margin-top: 8px;"><strong>Data Consultada:</strong> <span id="print-report-date">--</span></p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #d1d5db; font-size: 14px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold; text-align: left;">Laboratório</th>
+                    <th style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold; text-align: left;">Professor</th>
+                    <th style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold; text-align: left; width: 180px;">Horário</th>
+                </tr>
+            </thead>
+            <tbody id="print-report-table-body">
+                </tbody>
+        </table>
+        
+        <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center;">
+            <p style="font-size: 10px; color: #9ca3af; font-family: monospace;">Fim do relatório geral estruturado por data.</p>
+        </div>
+    </div>
+    <div id="print-balanco-area" class="p-4 bg-white text-black font-sans">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="font-size: 24px; font-weight: bold; text-transform: uppercase; color: #1f2937;">Balanço Geral de Ocupação e Demandas</h1>
+            <p style="font-size: 14px; color: #6b7280; font-weight: 500; margin-top: 2px;">Faculdade Estácio Carapicuíba — SRL</p>
+            <p style="font-size: 13px; color: #374151; margin-top: 8px;"><span id="print-balanco-periodo">--</span></p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #d1d5db; font-size: 14px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold; text-align: left;">Reserva</th>
+                    <th style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold; text-align: center; width: 180px;">Uso comparativo (%)</th>
+                </tr>
+            </thead>
+            <tbody id="print-balanco-table-body">
+                </tbody>
+        </table>
+        
+        <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center;">
+            <p style="font-size: 10px; color: #9ca3af; font-family: monospace;">Métricas calculadas de forma proporcional agregada com base nos dados ativos.</p>
+        </div>
+    </div>
+    <script>
+        // Captura e valida as travas de sessão JWT do Administrador
+        const token = localStorage.getItem('sisreserva_token');
+        const adminLogado = JSON.parse(localStorage.getItem('sisreserva_user') || '{}');
+
+        // Proteção de Borda no Front: Se tentar acessar direto sem token ou não for ADMIN, chuta para o login
+        if (!token || adminLogado.role !== 'ADMIN') {
+            alert("Acesso restrito. Por favor, autentique-se como administrador.");
+            window.location.href = 'index.html';
+        }
+
+        // Variáveis de controle local populadas via API
+        let listaLabs = [];
+
+        /* ==========================================================================
+           🔄 1. CARREGAR E RENDERIZAR PAINEL DE LABORATÓRIOS DO ORACLE
+           ========================================================================== */
+        async function buscarLaboratoriosDoBanco() {
+            try {
+                const response = await fetch('http://localhost:10000/api/laboratorios', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    listaLabs = result.laboratorios;
+                    renderizarTabelaLabs();
+                    renderizarBalanco();
+                }
+            } catch (err) {
+                console.error("Erro ao buscar laboratórios:", err);
+            }
+        }
+
+        function renderizarTabelaLabs() {
+            const tbody = document.getElementById('table-labs-body');
+            if (listaLabs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="py-4 text-center text-gray-400">Nenhum espaço cadastrado.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = listaLabs.map(lab => `
+                <tr class="hover:bg-gray-50/50 transition">
+                    <td class="py-3 font-medium text-gray-800">${lab.nome}</td>
+                    <td class="py-3 text-center">
+                        <button onclick="removerLaboratorio(${lab.id}, '${lab.nome}')" class="text-xs text-red-600 bg-red-50 px-2.5 py-1 rounded hover:bg-red-100 transition cursor-pointer font-semibold">
+                            <i class="fa-regular fa-trash-can"></i> Remover
+                        </button>
+                    </td>
+                </tr>`).join('');
+        }
+
+        /* ==========================================================================
+           📊 2. RELATÓRIO DO BALANÇO DE UTILIZAÇÃO REAL (INTERVALO DE DATAS)
+           ========================================================================== */
+        // Configuração Inicial Automática: Preenche os inputs para mirar nos últimos 30 dias
+        const dHoje = new Date();
+        const dTrintaDiasAtras = new Date();
+        dTrintaDiasAtras.setDate(dHoje.getDate() - 30);
+
+        document.getElementById('balanco-data-fim').value = dHoje.toISOString().split('T')[0];
+        document.getElementById('balanco-data-inicio').value = dTrintaDiasAtras.toISOString().split('T')[0];
+
+        // Escopo local para reter as métricas atuais na memória
+        let dadosBalancoAtual = [];
+
+        async function renderizarBalanco() {
+            const container = document.getElementById('grid-balanco');
+            const dataInicio = document.getElementById('balanco-data-inicio').value;
+            const dataFim = document.getElementById('balanco-data-fim').value;
+
+            try {
+                // Dispara os filtros selecionados na query string para a Rota 11
+                const response = await fetch(`http://localhost:10000/api/admin/balanco-uso?inicio=${dataInicio}&fim=${dataFim}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+
+                if (result.success && result.balanco.length > 0) {
+                    dadosBalancoAtual = result.balanco; 
+                    
+                    container.innerHTML = dadosBalancoAtual.map(lab => {
+                        const corBarra = lab.percentual > 50 ? 'bg-amber-500' : (lab.percentual > 0 ? 'bg-blue-600' : 'bg-gray-300');
+
+                        return `
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-medium text-gray-700">
+                                    <span>${lab.nome}</span>
+                                    <span class="font-bold">${lab.percentual}%</span>
+                                </div>
+                                <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                    <div class="${corBarra} h-2 rounded-full transition-all duration-500" style="width: ${lab.percentual}%"></div>
+                                </div>
+                            </div>`;
+                    }).join('');
+                } else {
+                    container.innerHTML = `<p class="text-xs text-gray-400 py-2">Nenhum agendamento computado para este intervalo de datas.</p>`;
+                }
+            } catch (err) {
+                console.error("Erro ao renderizar gráficos:", err);
+                container.innerHTML = `<p class="text-xs text-red-500 py-2">Falha ao calcular métricas de uso.</p>`;
+            }
+        }
+
+        /* ==========================================================================
+           📥 3. ADICIONAR NOVO LABORATÓRIO (API FASTIFY + REFRESH)
+           ========================================================================== */
+        document.getElementById('form-add-lab').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('novo-lab-nome');
+            const nomeLab = input.value.trim();
+
+            try {
+                const response = await fetch('http://localhost:10000/api/laboratorios/adicionar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ nomeLab })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    input.value = '';
+                    // Recarrega as tabelas direto da nuvem refletindo instantaneamente
+                    await buscarLaboratoriosDoBanco();
+                } else {
+                    alert(result.message || "Falha ao registrar espaço.");
+                }
+            } catch (err) {
+                alert("Erro de conexão ao salvar laboratório.");
+            }
+        });
+
+        /* ==========================================================================
+           🗑️ 4. REMOVER LABORATÓRIO (REMOÇÃO LÓGICA NO BANCO ORACLE)
+           ========================================================================== */
+        async function removerLaboratorio(id, nome) {
+            if (confirm(`Deseja realmente remover de forma permanente o espaço "${nome}" da unidade?`)) {
+                try {
+                    const response = await fetch(`http://localhost:10000/api/laboratorios/remover/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert(result.message);
+                        await buscarLaboratoriosDoBanco();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (err) {
+                    alert("Erro de conexão ao remover laboratório do servidor.");
+                }
+            }
+        }
+
+        /* ==========================================================================
+           🖨️ 5. COMPILAR AGENDA DIÁRIA INTEGRADA E GERAR PDF
+           ========================================================================== */
+        async function imprimirRelatorioDiario() {
+            const dataEscolhida = document.getElementById('filtro-data-relatorio').value;
+            if (!dataEscolhida) { alert("Selecione uma data válida."); return; }
+
+            const dataObjeto = new Date(`${dataEscolhida}T00:00:00`);
+            const dataFormatadaBr = dataObjeto.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('print-report-date').innerText = dataFormatadaBr;
+
+            const tbodyPrint = document.getElementById('print-report-table-body');
+            const areaAgenda = document.getElementById('print-report-area');
+            const areaBalanco = document.getElementById('print-balanco-area');
+
+            try {
+                const response = await fetch(`http://localhost:10000/api/admin/agendamentos-hoje?data=${dataEscolhida}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+
+                if (result.success && result.agendamentos.length > 0) {
+                    tbodyPrint.innerHTML = result.agendamentos.map(a => `
+                        <tr style="border-bottom: 1px solid #d1d5db;">
+                            <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 500; color: #1f2937;">${a.lab}</td>
+                            <td style="border: 1px solid #d1d5db; padding: 10px; color: #374151;">${a.prof}</td>
+                            <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 600; color: #111827; white-space: nowrap;">${a.hora}</td>
+                        </tr>`).join('');
+                } else {
+                    tbodyPrint.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 16px; color: #6b7280; border: 1px solid #d1d5db;">Nenhum agendamento realizado para esta data.</td></tr>`;
+                }
+
+                // CONTROLE DE ISOLAÇÃO: Limpa classes e ativa estritamente a Agenda Diária
+                areaBalanco.classList.remove('imprimir-balanco-ativo');
+                areaAgenda.classList.add('imprimir-agenda-ativa');
+
+                setTimeout(() => {
+                    window.print();
+                }, 150);
+
+            } catch (err) {
+                alert("Erro ao buscar dados da agenda.");
+            }
+        }
+
+        // Inicializa o painel trazendo a carga relacional da Oracle Cloud
+        buscarLaboratoriosDoBanco();
+
+        /* ==========================================================================
+           🔐 6. CONTROLES DE ALTERAÇÃO DE SENHA DO ADMINISTRADOR
+           ========================================================================== */
+        function abrirModalSenhaAdmin() {
+            document.getElementById('modal-senha-admin').classList.remove('hidden');
+        }
+
+        function fecharModalSenhaAdmin() {
+            document.getElementById('modal-senha-admin').classList.add('hidden');
+            document.getElementById('admin-senha-input').value = '';
+        }
+
+        document.getElementById('form-alterar-senha-admin').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const novaSenha = document.getElementById('admin-senha-input').value;
+
+            try {
+                // Reaproveita a Rota 2 estruturada de alteração de senha de usuário logado
+                const response = await fetch('http://localhost:10000/api/user/change-password', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ novaSenha })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("Senha do Administrador atualizada com sucesso.");
+                    fecharModalSenhaAdmin();
+                } else {
+                    alert(result.message || "Erro ao modificar credencial.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Erro de rede ao conectar com o servidor.");
+            }
+        });
+
+        /* Função para alternar o tipo do campo entre 'password' e 'text' */
+        function alternarVisibilidadeSenhaAdmin() {
+            const inputSenha = document.getElementById('admin-senha-input');
+            const iconeOlho = document.getElementById('icone-olho-admin');
+
+            if (inputSenha.type === 'password') {
+                inputSenha.type = 'text';
+                iconeOlho.classList.remove('fa-eye');
+                iconeOlho.classList.add('fa-eye-slash'); // Muda para o ícone com risco
+            } else {
+                inputSenha.type = 'password';
+                iconeOlho.classList.remove('fa-eye-slash');
+                iconeOlho.classList.add('fa-eye');
+            }
+        }
+
+        /* ==========================================================================
+           📥 7. ENVIAR CADASTRO DE NOVO DOCENTE PARA O BANCO ORACLE
+           ========================================================================== */
+        document.getElementById('form-add-docente').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const nome = document.getElementById('docente-nome').value.trim();
+            const email = document.getElementById('docente-email').value.trim();
+            const senha = document.getElementById('docente-senha').value;
+
+            // Validação estrita de segurança preventiva no front
+            if (senha.length < 8) {
+                alert("Erro: A senha inicial precisa ter pelo menos 8 caracteres.");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:10000/api/admin/docentes/cadastrar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ nome, email, senha })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    
+                    // Limpa os campos do formulário para o próximo registro
+                    document.getElementById('docente-nome').value = '';
+                    document.getElementById('docente-email').value = '';
+                    document.getElementById('docente-senha').value = '';
+                } else {
+                    alert(result.message || "Não foi possível cadastrar o docente.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Erro de conexão com o servidor ao registrar novo docente.");
+            }
+        });
+
+        /* ==========================================================================
+           🖨️ 8. IMPRIMIR COMPILADO DE MÉTRICAS DO BALANÇO (ESTILIZADO EM LINHA)
+           ========================================================================== */
+        function imprimirBalancoGeral() {
+            if (dadosBalancoAtual.length === 0) {
+                alert("Não existem dados de balanço para realizar a impressão.");
+                return;
+            }
+
+            const dataInicio = document.getElementById('balanco-data-inicio').value.split('-').reverse().join('/');
+            const dataFim = document.getElementById('balanco-data-fim').value.split('-').reverse().join('/');
+            document.getElementById('print-balanco-periodo').innerHTML = `<strong>Período Analisado:</strong> ${dataInicio} a ${dataFim}`;
+
+            const tbodyPrint = document.getElementById('print-balanco-table-body');
+            const areaAgenda = document.getElementById('print-report-area');
+            const areaBalanco = document.getElementById('print-balanco-area');
+            
+            tbodyPrint.innerHTML = dadosBalancoAtual.map(lab => `
+                <tr style="border-bottom: 1px solid #d1d5db;">
+                    <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 500; color: #1f2937;">${lab.nome}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center; font-weight: bold; color: #111827;">${lab.percentual}%</td>
+                </tr>
+            `).join('');
+
+            // CONTROLE DE ISOLAÇÃO: Limpa classes e ativa estritamente o Balanço Geral
+            areaAgenda.classList.remove('imprimir-agenda-ativa');
+            areaBalanco.classList.add('imprimir-balanco-ativo');
+
+            setTimeout(() => {
+                window.print();
+            }, 150);
+        }
+
+        /* ==========================================================================
+           🚪 9. LOGOUT SEGURO (DESTRUIÇÃO DE SESSÃO E TOKEN)
+           ========================================================================== */
+        function efetuarLogoutAdmin() {
+            // Remove cirurgicamente as credenciais guardadas na memória do navegador
+            localStorage.removeItem('sisreserva_token');
+            localStorage.removeItem('sisreserva_user');
+
+            // Chuta o usuário limpo de volta para a tela inicial
+            window.location.href = 'index.html';
+        }
+        
+        
+    </script>
+</body>
+</html>
