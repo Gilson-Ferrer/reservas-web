@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SRL- Sistema de Reserva de Laboratórios</title>
+    <link rel="icon" type="image/png" href="assets/logotipo.png">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Cor institucional customizada da Estácio */
         .bg-estacio-azul { background-color: #0066cc; }
         .text-estacio-azul { color: #0066cc; }
         .border-estacio-azul { border-color: #0066cc; }
@@ -18,28 +18,19 @@
 
     <div class="bg-white rounded-lg shadow-xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row">
         
-        <div class="hidden md:flex md:w-1/2 bg-teal-500 p-8 flex-col justify-center items-center text-white text-center">
-            <h2 class="text-3xl font-bold mb-2">Reserva de Laboratórios</h2>
-            <p class="text-xl font-light mb-6">Estácio<span class="font-semibold">- Carapicuíba</span>.</p>
-            <svg class="w-64 h-64" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="100" cy="100" r="80" fill="#ffffff" fill-opacity="0.2"/>
-                <rect x="50" y="70" width="100" height="70" rx="8" fill="white" />
-                <rect x="60" y="80" width="80" height="40" fill="#e2e8f0" />
-                <path d="M90 140H110V165H90V140Z" fill="#cbd5e1" />
-                <path d="M75 165H125V170H75V165Z" fill="#94a3b8" />
-            </svg>
+        <div class="hidden md:flex md:w-1/2 bg-[url('assets/background_login.png')] bg-cover bg-center p-8 flex-col items-center text-white text-center relative">
+            <div class="absolute inset-0 z-0"></div> <div class="relative z-10 drop-shadow-md mt-4">
+                <h2 class="text-xl mb-2">Educar para <strong>Transformar</strong></h2>
+            </div>
         </div>
 
         <div class="w-full md:w-1/2 p-8 flex flex-col justify-between">
             
             <div class="text-center mb-6">
-                <div class="flex justify-center mb-2">
-                    <div class="w-12 h-12 bg-gradient-to-br from-teal-400 to-estacio-azul transform rotate-45 flex items-center justify-center shadow-md">
-                        <div class="w-6 h-6 bg-white transform -rotate-45 opacity-40"></div>
-                    </div>
+                <div class="flex justify-center mb-3">
+                    <img src="assets/estacio-logo.png" alt="Logotipo Estácio" class="h-7 w-auto object-contain">
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">Estácio</h1>
-                <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">SRL - Sistema de Reserva de Laboratórios</p>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">SRL - Sistema de Reserva de Laboratórios</p>
                 <p class="text-xs text-gray-400 mt-1" id="current-date"></p>
             </div>
 
@@ -90,6 +81,7 @@
                 </button>
             </div>
         </div>
+        
     </div>
 
 <div id="recovery-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
@@ -138,7 +130,7 @@
             </h3>
             
             <div class="text-sm text-gray-600 space-y-3 leading-relaxed">
-                <p>O acesso à plataforma SisReserva é restrito e exclusivo para <strong>e-mails corporativos institucionais</strong>.</p>
+                <p>O acesso à plataforma SRL é restrito e exclusivo para <strong>e-mails corporativos institucionais</strong>.</p>
                 
                 <div class="bg-gray-50 border border-gray-200 rounded-md p-3 space-y-1.5 font-mono text-xs text-gray-700">
                     <span class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 font-sans mb-1">Padrões de E-mail Permitidos:</span>
@@ -191,16 +183,13 @@
             document.getElementById('recovery-modal').classList.add('hidden');
         }
 
-        // Interceptador do Envio Real para a API Fastify
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            // Captura os valores limpando possíveis espaços vazios acidentais
+
             const email = document.getElementById('email').value.trim();
             const senha = document.getElementById('password').value;
 
             try {
-                // CORREÇÃO: Apontando exatamente para a rota correta da porta 10000
                 const response = await fetch('http://localhost:10000/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -210,18 +199,16 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // Armazena o Token JWT e dados do utilizador localmente no navegador
+
                     localStorage.setItem('sisreserva_token', result.token);
                     localStorage.setItem('sisreserva_user', JSON.stringify(result.user));
 
-                    // Redirecionamento baseado na Role cadastrada no Oracle DB
                     if (result.user.role === 'ADMIN') {
                         window.location.href = 'admin.html';
                     } else {
                         window.location.href = 'dashboard.html';
                     }
                 } else {
-                    // Exibe a mensagem de erro exata retornada pelo Fastify
                     alert(result.message || 'Falha na autenticação.');
                 }
             } catch (err) {
@@ -230,9 +217,6 @@
             }
         });
 
-        /* ==========================================================================
-           ℹ️ CONTROLES DO MODAL DE SUPORTE E AJUDA AO DOCENTE
-           ========================================================================== */
         function abrirModalAjuda() {
             document.getElementById('modal-ajuda-login').classList.remove('hidden');
         }

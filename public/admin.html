@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SRL - Painel Administrativo</title>
+    <link rel="icon" type="image/png" href="assets/logotipo.png">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -11,22 +12,16 @@
         .text-estacio-azul { color: #0066cc; }
         .border-estacio-azul { border-color: #0066cc; }
         .hover-estacio-azul:hover { background-color: #0052a3; }
-        
-        /* Na tela normal do computador/celular, esconde as folhas de relatório de forma limpa */
         #print-report-area, #print-balanco-area { display: none; }
 
         @media print {
-            /* Oculta de forma estrita todo o conteúdo do painel administrativo */
             body * { display: none !important; }
-            
-            /* Exibe o container da Agenda de Reservas de forma estruturada */
+
             #print-report-area.imprimir-agenda-ativa { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
             #print-report-area.imprimir-agenda-ativa * { display: revert !important; }
             #print-report-area table { width: 100% !important; border-collapse: collapse !important; display: table !important; }
             #print-report-area tr { display: table-row !important; }
             #print-report-area th, #print-report-area td { display: table-cell !important; }
-
-            /* Exibe o container do Balanço Geral de forma estruturada */
             #print-balanco-area.imprimir-balanco-ativo { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
             #print-balanco-area.imprimir-balanco-ativo * { display: revert !important; }
             #print-balanco-area table { width: 100% !important; border-collapse: collapse !important; display: table !important; }
@@ -40,12 +35,8 @@
     <header class="bg-white shadow-sm border-b border-gray-200 no-print">
         <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-gradient-to-br from-teal-400 to-blue-600 transform rotate-45 flex items-center justify-center">
-                    <div class="w-4 h-4 bg-white transform -rotate-45 opacity-40"></div>
-                </div>
-                <div>
-                    <span class="font-bold text-gray-800 block leading-tight">SRL - Sistema de Reserva de Laboratórios</span>
-                    <span class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Estácio Carapicuíba</span>
+                <div class="flex justify-center mb-3">
+                    <img src="assets/estacio-logo.png" alt="Logotipo Estácio" class="h-5 w-auto object-contain">
                 </div>
             </div>
             <div class="flex items-center gap-4">
@@ -238,22 +229,18 @@
         </div>
     </div>
     <script>
-        // Captura e valida as travas de sessão JWT do Administrador
+
         const token = localStorage.getItem('sisreserva_token');
         const adminLogado = JSON.parse(localStorage.getItem('sisreserva_user') || '{}');
 
-        // Proteção de Borda no Front: Se tentar acessar direto sem token ou não for ADMIN, chuta para o login
         if (!token || adminLogado.role !== 'ADMIN') {
             alert("Acesso restrito. Por favor, autentique-se como administrador.");
             window.location.href = 'index.html';
         }
 
-        // Variáveis de controle local populadas via API
         let listaLabs = [];
 
-        /* ==========================================================================
-           🔄 1. CARREGAR E RENDERIZAR PAINEL DE LABORATÓRIOS DO ORACLE
-           ========================================================================== */
+
         async function buscarLaboratoriosDoBanco() {
             try {
                 const response = await fetch('http://localhost:10000/api/laboratorios', {
@@ -290,10 +277,7 @@
                 </tr>`).join('');
         }
 
-        /* ==========================================================================
-           📊 2. RELATÓRIO DO BALANÇO DE UTILIZAÇÃO REAL (INTERVALO DE DATAS)
-           ========================================================================== */
-        // Configuração Inicial Automática: Preenche os inputs para mirar nos últimos 30 dias
+
         const dHoje = new Date();
         const dTrintaDiasAtras = new Date();
         dTrintaDiasAtras.setDate(dHoje.getDate() - 30);
@@ -301,7 +285,6 @@
         document.getElementById('balanco-data-fim').value = dHoje.toISOString().split('T')[0];
         document.getElementById('balanco-data-inicio').value = dTrintaDiasAtras.toISOString().split('T')[0];
 
-        // Escopo local para reter as métricas atuais na memória
         let dadosBalancoAtual = [];
 
         async function renderizarBalanco() {
@@ -310,7 +293,7 @@
             const dataFim = document.getElementById('balanco-data-fim').value;
 
             try {
-                // Dispara os filtros selecionados na query string para a Rota 11
+
                 const response = await fetch(`http://localhost:10000/api/admin/balanco-uso?inicio=${dataInicio}&fim=${dataFim}`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -343,9 +326,6 @@
             }
         }
 
-        /* ==========================================================================
-           📥 3. ADICIONAR NOVO LABORATÓRIO (API FASTIFY + REFRESH)
-           ========================================================================== */
         document.getElementById('form-add-lab').addEventListener('submit', async function(e) {
             e.preventDefault();
             const input = document.getElementById('novo-lab-nome');
@@ -365,7 +345,6 @@
                 if (result.success) {
                     alert(result.message);
                     input.value = '';
-                    // Recarrega as tabelas direto da nuvem refletindo instantaneamente
                     await buscarLaboratoriosDoBanco();
                 } else {
                     alert(result.message || "Falha ao registrar espaço.");
@@ -375,9 +354,6 @@
             }
         });
 
-        /* ==========================================================================
-           🗑️ 4. REMOVER LABORATÓRIO (REMOÇÃO LÓGICA NO BANCO ORACLE)
-           ========================================================================== */
         async function removerLaboratorio(id, nome) {
             if (confirm(`Deseja realmente remover de forma permanente o espaço "${nome}" da unidade?`)) {
                 try {
@@ -399,9 +375,6 @@
             }
         }
 
-        /* ==========================================================================
-           🖨️ 5. COMPILAR AGENDA DIÁRIA INTEGRADA E GERAR PDF
-           ========================================================================== */
         async function imprimirRelatorioDiario() {
             const dataEscolhida = document.getElementById('filtro-data-relatorio').value;
             if (!dataEscolhida) { alert("Selecione uma data válida."); return; }
@@ -432,7 +405,7 @@
                     tbodyPrint.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 16px; color: #6b7280; border: 1px solid #d1d5db;">Nenhum agendamento realizado para esta data.</td></tr>`;
                 }
 
-                // CONTROLE DE ISOLAÇÃO: Limpa classes e ativa estritamente a Agenda Diária
+
                 areaBalanco.classList.remove('imprimir-balanco-ativo');
                 areaAgenda.classList.add('imprimir-agenda-ativa');
 
@@ -445,12 +418,9 @@
             }
         }
 
-        // Inicializa o painel trazendo a carga relacional da Oracle Cloud
         buscarLaboratoriosDoBanco();
 
-        /* ==========================================================================
-           🔐 6. CONTROLES DE ALTERAÇÃO DE SENHA DO ADMINISTRADOR
-           ========================================================================== */
+
         function abrirModalSenhaAdmin() {
             document.getElementById('modal-senha-admin').classList.remove('hidden');
         }
@@ -465,7 +435,7 @@
             const novaSenha = document.getElementById('admin-senha-input').value;
 
             try {
-                // Reaproveita a Rota 2 estruturada de alteração de senha de usuário logado
+
                 const response = await fetch('http://localhost:10000/api/user/change-password', {
                     method: 'POST',
                     headers: { 
@@ -489,7 +459,7 @@
             }
         });
 
-        /* Função para alternar o tipo do campo entre 'password' e 'text' */
+
         function alternarVisibilidadeSenhaAdmin() {
             const inputSenha = document.getElementById('admin-senha-input');
             const iconeOlho = document.getElementById('icone-olho-admin');
@@ -497,7 +467,7 @@
             if (inputSenha.type === 'password') {
                 inputSenha.type = 'text';
                 iconeOlho.classList.remove('fa-eye');
-                iconeOlho.classList.add('fa-eye-slash'); // Muda para o ícone com risco
+                iconeOlho.classList.add('fa-eye-slash'); 
             } else {
                 inputSenha.type = 'password';
                 iconeOlho.classList.remove('fa-eye-slash');
@@ -505,9 +475,7 @@
             }
         }
 
-        /* ==========================================================================
-           📥 7. ENVIAR CADASTRO DE NOVO DOCENTE PARA O BANCO ORACLE
-           ========================================================================== */
+
         document.getElementById('form-add-docente').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -515,7 +483,6 @@
             const email = document.getElementById('docente-email').value.trim();
             const senha = document.getElementById('docente-senha').value;
 
-            // Validação estrita de segurança preventiva no front
             if (senha.length < 8) {
                 alert("Erro: A senha inicial precisa ter pelo menos 8 caracteres.");
                 return;
@@ -536,7 +503,6 @@
                 if (result.success) {
                     alert(result.message);
                     
-                    // Limpa os campos do formulário para o próximo registro
                     document.getElementById('docente-nome').value = '';
                     document.getElementById('docente-email').value = '';
                     document.getElementById('docente-senha').value = '';
@@ -549,9 +515,6 @@
             }
         });
 
-        /* ==========================================================================
-           🖨️ 8. IMPRIMIR COMPILADO DE MÉTRICAS DO BALANÇO (ESTILIZADO EM LINHA)
-           ========================================================================== */
         function imprimirBalancoGeral() {
             if (dadosBalancoAtual.length === 0) {
                 alert("Não existem dados de balanço para realizar a impressão.");
@@ -573,7 +536,6 @@
                 </tr>
             `).join('');
 
-            // CONTROLE DE ISOLAÇÃO: Limpa classes e ativa estritamente o Balanço Geral
             areaAgenda.classList.remove('imprimir-agenda-ativa');
             areaBalanco.classList.add('imprimir-balanco-ativo');
 
@@ -582,15 +544,10 @@
             }, 150);
         }
 
-        /* ==========================================================================
-           🚪 9. LOGOUT SEGURO (DESTRUIÇÃO DE SESSÃO E TOKEN)
-           ========================================================================== */
         function efetuarLogoutAdmin() {
-            // Remove cirurgicamente as credenciais guardadas na memória do navegador
+
             localStorage.removeItem('sisreserva_token');
             localStorage.removeItem('sisreserva_user');
-
-            // Chuta o usuário limpo de volta para a tela inicial
             window.location.href = 'index.html';
         }
         

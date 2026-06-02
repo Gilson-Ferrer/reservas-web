@@ -4,28 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SRL - Dashboard de Reservas</title>
-    <!-- Tailwind CSS -->
+    <link rel="icon" type="image/png" href="assets/logotipo.png">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .bg-estacio-azul { background-color: #0066cc; }
         .text-estacio-azul { color: #0066cc; }
         .border-estacio-azul { border-color: #0066cc; }
         .hover-estacio-azul:hover { background-color: #0052a3; }
-        
-        /* Na tela normal do computador/celular, esconde a folha de impressão */
         #print-area { display: none; }
 
         @media print {
-            /* Oculta de forma estrita todo o conteúdo do painel web */
             body * { display: none !important; }
-            
-            /* Exibe o container do print e preserva os elementos internos como tabela */
             #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
-            #print-area * { display: revert !important; } /* Reverte para o comportamento HTML padrão */
-            
-            /* Garante que a tabela use 100% da largura da folha A4 */
+            #print-area * { display: revert !important; }
             #print-area table { width: 100% !important; border-collapse: collapse !important; display: table !important; }
             #print-area tr { display: table-row !important; }
             #print-area th, #print-area td { display: table-cell !important; }
@@ -34,18 +26,11 @@
 </head>
 <body class="bg-gray-50 font-sans min-h-screen pb-12">
 
-    <!-- Header / Navbar -->
     <header class="bg-white shadow-sm border-b border-gray-200 no-print">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-gradient-to-br from-teal-400 to-blue-600 transform rotate-45 flex items-center justify-center">
-                    <div class="w-4 h-4 bg-white transform -rotate-45 opacity-40"></div>
+                <div class="flex justify-center mb-3">
+                    <img src="assets/estacio-logo.png" alt="Logotipo Estácio" class="h-5 w-auto object-contain">
                 </div>
-                <div>
-                    <span class="font-bold text-gray-800 block leading-tight">Estácio</span>
-                    <span class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Carapicuíba</span>
-                </div>
-            </div>
                 <div class="flex items-center gap-4">
                     <span class="text-xs text-gray-600 hidden sm:inline">Olá, <strong id="prof-nome"></strong></span>
                     <button onclick="abrirModalSenha()" class="text-gray-500 hover:text-blue-600 transition text-sm cursor-pointer" title="Alterar Senha">
@@ -57,19 +42,13 @@
                 </div>
         </div>
     </header>
-
-    <!-- Conteúdo Principal -->
     <main class="max-w-4xl mx-auto px-4 mt-6 space-y-6 no-print">
-        
-        <!-- CARD 1: Agendamento e Consulta de Disponibilidade -->
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
             <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <i class="fa-solid fa-calendar-plus text-estacio-azul"></i> Nova Reserva de Laboratório
             </h2>
             
             <form id="form-reserva" class="space-y-5">
-                
-                <!-- 1. Seleção Única do Laboratório (Lista Oficial Fornecida) -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
                         1. Selecione o Laboratório
@@ -78,25 +57,18 @@
                         <option value="" disabled selected>Carregando...</option>
                     </select>
                 </div>
-
-                <!-- 2. Data do Agendamento -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
                         2. Selecione a Data
                     </label>
                     <input type="date" id="data-reserva" required class="w-full border border-gray-300 rounded-md p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-
-                <!-- PAINEL DINÂMICO: Agenda do Dia do Lab Escolhido -->
                 <div id="painel-disponibilidade" class="hidden bg-slate-50 border border-slate-200 rounded-md p-4">
                     <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <i class="fa-regular fa-clock text-estacio-azul"></i> Horários reservados para este dia:
                     </h3>
-                    <!-- Lista de horários comprometidos injetada por JS -->
                     <div id="status-horarios" class="text-xs text-gray-600 space-y-1"></div>
                 </div>
-
-                <!-- 3. Definição do Horário Desejado -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Horário Início</label>
@@ -107,15 +79,11 @@
                         <input type="time" id="hora-fim" min="07:00" max="23:00" required class="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
-
-                <!-- Botão de Confirmação -->
                 <button type="submit" class="w-full bg-estacio-azul text-white py-2.5 rounded-md font-semibold hover-estacio-azul transition shadow-md text-sm cursor-pointer">
                     Confirmar Agendamento
                 </button>
             </form>
         </section>
-
-        <!-- CARD 2: Histórico/Suas Reservas Ativas -->
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -156,7 +124,6 @@
             </form>
         </div>
     </div>
-    <!-- ÁREA DE IMPRESSÃO OCULTA -->
     <div id="print-area" class="p-4 bg-white text-black font-sans">
         <div style="text-align: center; margin-bottom: 24px;">
             <h1 style="font-size: 18px; font-weight: bold; text-transform: uppercase; color: #1f2937;">Comprovante de Agendamento</h1>
@@ -180,19 +147,15 @@
             <p style="font-size: 10px; color: #9ca3af; font-family: monospace;">Documento gerado eletronicamente em conformidade com as regras operacionais da unidade.</p>
         </div>
     </div>
-
-    <!-- Script Lógico Interativo -->
     <script>
-        // Recupera o Token JWT e as informações do usuário armazenadas no momento do login
+
         const token = localStorage.getItem('sisreserva_token');
         const usuarioLogado = JSON.parse(localStorage.getItem('sisreserva_user') || '{}');
 
-        // Trava de segurança no Frontend: Se o usuário tentar acessar sem token, chuta de volta para o Login
         if (!token) {
             window.location.href = 'index.html';
         }
 
-        // Insere o nome do professor logado dinamicamente na tela
         document.getElementById('prof-nome').innerText = `${usuarioLogado.nome || 'Docente'}`;
 
         const selectLab = document.getElementById('select-lab');
@@ -200,17 +163,13 @@
         const painelDisponibilidade = document.getElementById('painel-disponibilidade');
         const statusHorarios = document.getElementById('status-horarios');
 
-        // Elementos de controle locais
         let minhasReservas = [];
 
-        // Escuta as alterações de Lab e Data para disparar a consulta real de ocupação no banco
         [selectLab, inputData].forEach(element => {
             element.addEventListener('change', checarDisponibilidadeHorarios);
         });
 
-        /* ==========================================================================
-           🔄 1. BUSCAR HORÁRIOS OCUPADOS (API FASTIFY + ORACLE DB)
-           ========================================================================== */
+
         async function checarDisponibilidadeHorarios() {
             const labEscolhido = selectLab.value;
             const dataEscolhida = inputData.value;
@@ -221,7 +180,6 @@
             }
 
             try {
-                // Realiza a requisição passando as variáveis pela query string e o cabeçalho de autenticação
                 const response = await fetch(`http://localhost:10000/api/agendamentos/disponibilidade?lab=${encodeURIComponent(labEscolhido)}&data=${dataEscolhida}`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -254,9 +212,6 @@
             }
         }
 
-        /* ==========================================================================
-           📋 2. RENDERIZAR E CANCELAR RESERVAS ATIVAS
-           ========================================================================== */
         function renderizarReservas() {
             const container = document.getElementById('lista-agendamentos');
             if (minhasReservas.length === 0) {
@@ -309,9 +264,6 @@
             }
         }
 
-        /* ==========================================================================
-           📥 3. ENVIAR FORMULÁRIO DE NOVA RESERVA (VALIDADO PELO BACKEND)
-           ========================================================================== */
         document.getElementById('form-reserva').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -327,7 +279,7 @@
                 alert("Operação negada, data ou horário inválido.");
                 return;
             }
-            // Validação de segurança local (Garante conformidade com o escopo)
+
             if (inicio < "07:00" || fim > "23:00" || inicio >= fim) {
                 alert("Horário inválido! Escolha um intervalo de segunda a sábado, entre 07:00 e 23:00.");
                 return;
@@ -348,15 +300,12 @@
                 if (result.success) {
                     alert(result.message);
                     
-                    // 1. Reseta os seletores de horário da tela
                     document.getElementById('hora-inicio').value = '';
                     document.getElementById('hora-fim').value = '';
                     
-                    // 2. CORREÇÃO DE OURO: Busca no Oracle o histórico atualizado contendo o AGENDAMENTO_ID real incremental
                     await carregarHistoricoDoBanco(); 
-                    
-                    // 3. Atualiza os blocos visuais de interdição (o relógio dinâmico do topo)
                     checarDisponibilidadeHorarios();
+
                 } else {
                     alert(result.message || 'Falha ao processar reserva.');
                 }
@@ -366,9 +315,7 @@
             }
         });
 
-        /* ==========================================================================
-           🔄 4. FUNÇÃO CENTRAL DE CARREGAMENTO DO HISTÓRICO REAL (ORACLE DB)
-           ========================================================================== */
+
         async function carregarHistoricoDoBanco() {
             try {
                 const response = await fetch('http://localhost:10000/api/agendamentos/meus', {
@@ -380,11 +327,9 @@
                 if (result.success) {
     
                     minhasReservas = result.reservas.sort((a, b) => {
-                        // Combina a string de Data (YYYY-MM-DD) com a de Horário (HH:MM) para criar objetos Date comparáveis
                         const dataHoraA = new Date(`${a.data}T${a.inicio}:00`);
                         const dataHoraB = new Date(`${b.data}T${b.inicio}:00`);
                         
-                        // Retorna a subtração cronológica crescente
                         return dataHoraA - dataHoraB;
                     });
 
@@ -399,7 +344,6 @@
             const selectElement = document.getElementById('select-lab');
             
             try {
-                // Consome a Rota 7 passando o Token JWT no cabeçalho
                 const response = await fetch('http://localhost:10000/api/laboratorios', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -408,14 +352,13 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // Limpa o texto de "Carregando..." e prepara o combo
+
                     selectElement.innerHTML = '<option value="" disabled selected>Escolha o espaço...</option>';
                     
-                    // Alimenta as opções mapeando os registros reais salvos no Oracle Cloud
                     result.laboratorios.forEach(lab => {
                         const option = document.createElement('option');
-                        option.value = lab.nome; // O valor enviado no formulário será o nome (ex: "Lab 1 (Informática)")
-                        option.textContent = lab.nome; // O texto visível na tela para o professor
+                        option.value = lab.nome; 
+                        option.textContent = lab.nome; 
                         selectElement.appendChild(option);
                     });
                 } else {
@@ -428,9 +371,7 @@
             }
         }
 
-        /* ==========================================================================
-           🔐 5. GERENCIAMENTO E PROCESSAMENTO DE TROCA DE SENHA
-           ========================================================================== */
+
         function abrirModalSenha() {
             document.getElementById('modal-senha').classList.remove('hidden');
         }
@@ -439,7 +380,6 @@
             document.getElementById('modal-senha').classList.add('hidden');
             document.getElementById('nova-senha-input').value = '';
             
-            // Força o campo a voltar a ser 'password' ao fechar e reseta o ícone
             const inputSenha = document.getElementById('nova-senha-input');
             const iconeOlho = document.getElementById('icone-olho-docente');
             inputSenha.type = 'password';
@@ -457,12 +397,12 @@
             }
 
             try {
-                // Passa o Token do professor de forma estrita no cabeçalho
+
                 const response = await fetch('http://localhost:10000/api/user/change-password', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` // Garante que a variável token global está ativa
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ novaSenha })
                 });
@@ -481,7 +421,6 @@
             }
         });
 
-        /* Função de Visibilidade com os IDs Corrigidos do Docente */
         function alternarVisibilidadeSenha() {
             const inputSenha = document.getElementById('nova-senha-input');
             const iconeOlho = document.getElementById('icone-olho-docente');
@@ -496,26 +435,20 @@
                 iconeOlho.classList.add('fa-eye');
             }
         }
-        // Executa a inicialização de dados dinâmicos em paralelo assim que o documento abre
         carregarLaboratoriosDoBanco();
         carregarHistoricoDoBanco();
 
-        /* ==========================================================================
-           🖨️ 6. GERAR GRADE CONSOLIDADA E DISPARAR IMPRESSÃO ASYNC
-           ========================================================================== */
         function imprimirGradeCompleta() {
             if (!minhasReservas || minhasReservas.length === 0) {
                 alert("Você não possui nenhum agendamento ativo para gerar o relatório.");
                 return;
             }
 
-            // Injeta o nome real do professor que veio do banco no JWT
             const nomeProfessor = usuarioLogado.nome || 'Responsável';
             document.getElementById('print-professor-nome').innerText = nomeProfessor;
 
             const tbody = document.getElementById('print-table-body');
             
-            // CORREÇÃO: Garante o fechamento correto das tags de coluna (td) na mesma tr
             tbody.innerHTML = minhasReservas.map(res => {
                 const dataBr = res.data.split('-').reverse().join('/');
                 return `
@@ -527,21 +460,17 @@
                 `;
             }).join('');
 
-            // Aguarda o navegador desenhar o HTML estruturado antes de abrir a tela de PDF
             setTimeout(() => {
                 window.print();
             }, 150);
         }
 
-        /* ==========================================================================
-           🚪 7. LOGOUT SEGURO (DESTRUIÇÃO DE SESSÃO E TOKEN)
-           ========================================================================== */
+
         function efetuarLogout() {
-            // Remove cirurgicamente as credenciais guardadas na memória do navegador
+
             localStorage.removeItem('sisreserva_token');
             localStorage.removeItem('sisreserva_user');
 
-            // Chuta o usuário limpo de volta para a tela inicial
             window.location.href = 'index.html';
         }
 </script>
