@@ -260,16 +260,17 @@
                         minhasReservas = minhasReservas.filter(res => res.id !== id);
                         renderizarReservas();
                         await checarDisponibilidadeHorarios();
-                        desligarCarregando(); 
+ 
                         alert("Agendamento removido com sucesso.");
                     } else {
-                        desligarCarregando(); 
+ 
                         alert(result.message);
                     }
-                } catch (err) {
-                    desligarCarregando(); 
+                } catch (err) { 
                     alert("Erro ao conectar com o servidor para exclusão.");
-                } 
+                } finally {
+                desligarCarregando(); 
+            }
             }
         }
 
@@ -316,23 +317,24 @@
                     
                     await carregarHistoricoDoBanco(); 
                     await checarDisponibilidadeHorarios();
-                    desligarCarregando(); 
+                     
 
                 } else {
-                    desligarCarregando(); 
+                     
                     alert(result.message || 'Falha ao processar reserva.');
                 }
             } catch (err) {
-                desligarCarregando(); 
+                 
                 console.error(err);
                 alert("Não foi possível estabelecer contato com a API do SisReserva.");
+            } finally {
+                desligarCarregando(); 
             }
         });
 
 
         async function carregarHistoricoDoBanco() {
             try {
-                ligarCarregando();
                 const response = await fetch('/api/agendamentos/meus', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -352,9 +354,7 @@
                 }
             } catch (err) {
                 console.error("Não foi possível carregar o histórico inicial:", err);
-            } finally {
-                desligarCarregando();
-            }
+            } 
         }
 
         async function carregarLaboratoriosDoBanco() {
@@ -430,17 +430,19 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    desligarCarregando();
+                    
                     alert("Senha atualizada com sucesso.");
                     fecharModalSenha();
                 } else {
-                    desligarCarregando();
+                    
                     alert(result.message || "Não foi possível atualizar a senha.");
                 }
             } catch (err) {
-                desligarCarregando();
+                
                 console.error(err);
                 alert("Erro de rede ao tentar atualizar a senha.");
+            } finally {
+                desligarCarregando(); 
             }
         });
 
@@ -490,7 +492,6 @@
                 window.print();
             }, 150);
         }
-
 
         function efetuarLogout() {
 

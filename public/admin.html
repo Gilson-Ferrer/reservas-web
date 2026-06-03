@@ -254,7 +254,7 @@
                 if (result.success) {
                     listaLabs = result.laboratorios;
                     renderizarTabelaLabs();
-                    renderizarBalanco();
+                    await renderizarBalanco();
                 }
             } catch (err) {
                 console.error("Erro ao buscar laboratórios:", err);
@@ -349,14 +349,13 @@
                     alert(result.message);
                     input.value = '';
                     await buscarLaboratoriosDoBanco();
-                    desligarCarregando();
                 } else {
-                    desligarCarregando();
                     alert(result.message || "Falha ao registrar espaço.");
                 }
             } catch (err) {
-                desligarCarregando();
                 alert("Erro de conexão ao salvar laboratório.");
+            } finally {
+                desligarCarregando(); 
             }
         });
 
@@ -373,16 +372,18 @@
                     if (result.success) {
                         alert(result.message);
                         await buscarLaboratoriosDoBanco();
-                        desligarCarregando();
+                        
                     } else {
-                        desligarCarregando();
+                        
                         alert(result.message);
                     }
                 } catch (err) {
-                    desligarCarregando();
+      
                     alert("Erro de conexão ao remover laboratório do servidor.");
+                } finally {
+                desligarCarregando(); 
                 }
-            }
+            } 
         }
 
         async function imprimirRelatorioDiario() {
@@ -419,14 +420,16 @@
                 areaBalanco.classList.remove('imprimir-balanco-ativo');
                 areaAgenda.classList.add('imprimir-agenda-ativa');
 
-                desligarCarregando();
+                
                 setTimeout(() => {
                     window.print();
                 }, 150);
 
             } catch (err) {
-                desligarCarregando();
+                
                 alert("Erro ao buscar dados da agenda.");
+            } finally {
+                desligarCarregando(); 
             }
         }
 
@@ -467,17 +470,19 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    desligarCarregando(); 
+                     
                     alert("Senha do Administrador atualizada com sucesso.");
                     fecharModalSenhaAdmin();
                 } else {
-                    desligarCarregando(); 
+                     
                     alert(result.message || "Erro ao modificar credencial.");
                 }
             } catch (err) {
-                desligarCarregando(); 
+                 
                 console.error(err);
                 alert("Erro de rede ao conectar com o servidor.");
+            } finally {
+                desligarCarregando(); 
             }
         });
 
@@ -524,20 +529,22 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    desligarCarregando();
+                    
                     alert(result.message);
                     
                     document.getElementById('docente-nome').value = '';
                     document.getElementById('docente-email').value = '';
                     document.getElementById('docente-senha').value = '';
                 } else {
-                    desligarCarregando();
+                    
                     alert(result.message || "Não foi possível cadastrar o docente.");
                 }
             } catch (err) {
-                desligarCarregando();
+                
                 console.error(err);
                 alert("Erro de conexão com o servidor ao registrar novo docente.");
+            } finally {
+                desligarCarregando(); 
             }
         });
 
@@ -547,6 +554,7 @@
                 return;
             }
 
+            ligarCarregando();
             const dataInicio = document.getElementById('balanco-data-inicio').value.split('-').reverse().join('/');
             const dataFim = document.getElementById('balanco-data-fim').value.split('-').reverse().join('/');
             document.getElementById('print-balanco-periodo').innerHTML = `<strong>Período Analisado:</strong> ${dataInicio} a ${dataFim}`;
@@ -564,7 +572,8 @@
 
             areaAgenda.classList.remove('imprimir-agenda-ativa');
             areaBalanco.classList.add('imprimir-balanco-ativo');
-
+            
+            desligarCarregando(); 
             setTimeout(() => {
                 window.print();
             }, 150);
