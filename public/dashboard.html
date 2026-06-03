@@ -71,18 +71,16 @@
                     </h3>
                     <div id="status-horarios" class="text-xs text-gray-600 space-y-1"></div>
                 </div>
-                <div class="w-full max-w-[310px] sm:max-w-full mx-auto">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Horário Início</label>
-                            <input type="time" id="hora-inicio" min="07:00" max="23:00" required 
-                                class="w-full border border-gray-300 rounded-md p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-center sm:text-left bg-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Horário Fim</label>
-                            <input type="time" id="hora-fim" min="07:00" max="23:00" required 
-                                class="w-full border border-gray-300 rounded-md p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] text-center sm:text-left bg-white">
-                        </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Horário Início</label>
+                        <input type="time" id="hora-inicio" min="07:00" max="23:00" required 
+                            class="w-full border border-gray-300 rounded-md p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] bg-white max-sm:[letter-spacing:-0.03em] max-sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Horário Fim</label>
+                        <input type="time" id="hora-fim" min="07:00" max="23:00" required 
+                            class="w-full border border-gray-300 rounded-md p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] bg-white max-sm:[letter-spacing:-0.03em] max-sm:text-sm">
                     </div>
                 </div>
                 <button type="submit" class="w-full bg-estacio-azul text-white py-2.5 rounded-md font-semibold hover-estacio-azul transition shadow-md text-sm cursor-pointer">
