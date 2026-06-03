@@ -180,7 +180,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:10000/api/agendamentos/disponibilidade?lab=${encodeURIComponent(labEscolhido)}&data=${dataEscolhida}`, {
+                const response = await fetch(`/api/agendamentos/disponibilidade?lab=${encodeURIComponent(labEscolhido)}&data=${dataEscolhida}`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -244,7 +244,7 @@
         async function cancelarReserva(id) {
             if (confirm("Deseja realmente cancelar este agendamento semestral?")) {
                 try {
-                    const response = await fetch(`http://localhost:10000/api/agendamentos/cancelar/${id}`, {
+                    const response = await fetch(`/api/agendamentos/cancelar/${id}`, {
                         method: 'DELETE',
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
@@ -286,7 +286,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:10000/api/agendamentos/reservar', {
+                const response = await fetch('/api/agendamentos/reservar', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -318,7 +318,7 @@
 
         async function carregarHistoricoDoBanco() {
             try {
-                const response = await fetch('http://localhost:10000/api/agendamentos/meus', {
+                const response = await fetch('/api/agendamentos/meus', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -344,7 +344,7 @@
             const selectElement = document.getElementById('select-lab');
             
             try {
-                const response = await fetch('http://localhost:10000/api/laboratorios', {
+                const response = await fetch('/api/laboratorios', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -398,7 +398,7 @@
 
             try {
 
-                const response = await fetch('http://localhost:10000/api/user/change-password', {
+                const response = await fetch('/api/user/change-password', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',

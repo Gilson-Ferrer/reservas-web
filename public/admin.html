@@ -243,7 +243,7 @@
 
         async function buscarLaboratoriosDoBanco() {
             try {
-                const response = await fetch('http://localhost:10000/api/laboratorios', {
+                const response = await fetch('/api/laboratorios', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -294,7 +294,7 @@
 
             try {
 
-                const response = await fetch(`http://localhost:10000/api/admin/balanco-uso?inicio=${dataInicio}&fim=${dataFim}`, {
+                const response = await fetch(`/api/admin/balanco-uso?inicio=${dataInicio}&fim=${dataFim}`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -332,7 +332,7 @@
             const nomeLab = input.value.trim();
 
             try {
-                const response = await fetch('http://localhost:10000/api/laboratorios/adicionar', {
+                const response = await fetch('/api/laboratorios/adicionar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -357,7 +357,7 @@
         async function removerLaboratorio(id, nome) {
             if (confirm(`Deseja realmente remover de forma permanente o espaço "${nome}" da unidade?`)) {
                 try {
-                    const response = await fetch(`http://localhost:10000/api/laboratorios/remover/${id}`, {
+                    const response = await fetch(`/api/laboratorios/remover/${id}`, {
                         method: 'PUT',
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
@@ -388,7 +388,7 @@
             const areaBalanco = document.getElementById('print-balanco-area');
 
             try {
-                const response = await fetch(`http://localhost:10000/api/admin/agendamentos-hoje?data=${dataEscolhida}`, {
+                const response = await fetch(`/api/admin/agendamentos-hoje?data=${dataEscolhida}`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -436,7 +436,7 @@
 
             try {
 
-                const response = await fetch('http://localhost:10000/api/user/change-password', {
+                const response = await fetch('/api/user/change-password', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -489,7 +489,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:10000/api/admin/docentes/cadastrar', {
+                const response = await fetch('/api/admin/docentes/cadastrar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
