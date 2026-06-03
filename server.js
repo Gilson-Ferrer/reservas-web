@@ -70,7 +70,7 @@ fastify.register(rateLimit, {
   errorResponseBuilder: () => ({ success: false, message: 'Muitas requisições. Aguarde um momento.' })
 });
 
-fastify.register(helmet);
+fastify.register(helmet, { contentSecurityPolicy: false });
 
 fastify.register(cors, { 
   origin: ["*"], 
@@ -79,11 +79,13 @@ fastify.register(cors, {
 
 fastify.register(fastifyStatic, {
   root: path.join(__dirname, 'public'), 
-  prefix: '/', 
+  prefix: '/',
+  index: 'index.html',
 });
 
-fastify.get('/', async () => ({ status: 'online', service: 'SIA-ESTACIO-API' }));
-
+fastify.get('/', async (request, reply) => {
+  return reply.sendFile('index.html');
+});
 /* ======================
    LOGIN 
    ====================== */
