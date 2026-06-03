@@ -15,7 +15,10 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen flex items-center justify-center p-4">
-
+    
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999] opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="w-12 h-12 border-4 border-gray-200 border-t-[#249545] rounded-full animate-spin"></div>
+    </div>
     <div class="bg-white rounded-lg shadow-xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row">
         
         <div class="hidden md:flex md:w-1/2 bg-[url('assets/background_login.png')] bg-cover bg-center p-8 flex-col items-center text-white text-center relative">
@@ -190,6 +193,8 @@
             const senha = document.getElementById('password').value;
 
             try {
+
+                ligarCarregando();
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -214,6 +219,8 @@
             } catch (err) {
                 console.error('Erro de conexão com a API:', err);
                 alert('Não foi possível conectar ao servidor backend na porta 10000.');
+            }finally {
+                desligarCarregando(); 
             }
         });
 
@@ -223,6 +230,18 @@
 
         function fecharModalAjuda() {
             document.getElementById('modal-ajuda-login').classList.add('hidden');
+        }
+
+        function ligarCarregando() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            overlay.classList.add('opacity-100', 'pointer-events-auto');
+        }
+
+        function desligarCarregando() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.remove('opacity-100', 'pointer-events-auto');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
         }
 
     </script>
