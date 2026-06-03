@@ -25,7 +25,9 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen pb-12">
-
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999] hidden">
+        <div class="w-12 h-12 border-4 border-gray-200 border-t-[#249545] rounded-full animate-spin"></div>
+    </div>
     <header class="bg-white shadow-sm border-b border-gray-200 no-print">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="flex justify-center mb-3">
@@ -180,6 +182,7 @@
             }
 
             try {
+                ligarCarregando();
                 const response = await fetch(`/api/agendamentos/disponibilidade?lab=${encodeURIComponent(labEscolhido)}&data=${dataEscolhida}`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -209,6 +212,8 @@
             } catch (err) {
                 console.error("Erro ao checar horários:", err);
                 statusHorarios.innerHTML = `<span class="text-red-500">Erro de rede ao consultar cronograma.</span>`;
+            } finally {
+                desligarCarregando();
             }
         }
 
@@ -244,6 +249,7 @@
         async function cancelarReserva(id) {
             if (confirm("Deseja realmente cancelar este agendamento semestral?")) {
                 try {
+                    ligarCarregando();
                     const response = await fetch(`/api/agendamentos/cancelar/${id}`, {
                         method: 'DELETE',
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -260,6 +266,8 @@
                     }
                 } catch (err) {
                     alert("Erro ao conectar com o servidor para exclusão.");
+                } finally {
+                desligarCarregando(); 
                 }
             }
         }
@@ -286,6 +294,7 @@
             }
 
             try {
+                ligarCarregando();
                 const response = await fetch('/api/agendamentos/reservar', {
                     method: 'POST',
                     headers: { 
@@ -312,6 +321,8 @@
             } catch (err) {
                 console.error(err);
                 alert("Não foi possível estabelecer contato com a API do SisReserva.");
+            } finally {
+                desligarCarregando(); 
             }
         });
 
@@ -397,7 +408,7 @@
             }
 
             try {
-
+                ligarCarregando();
                 const response = await fetch('/api/user/change-password', {
                     method: 'POST',
                     headers: { 
@@ -418,6 +429,8 @@
             } catch (err) {
                 console.error(err);
                 alert("Erro de rede ao tentar atualizar a senha.");
+            } finally {
+                desligarCarregando(); 
             }
         });
 
@@ -472,6 +485,16 @@
             localStorage.removeItem('sisreserva_user');
 
             window.location.href = 'index.html';
+        }
+
+        function ligarCarregando() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.remove('hidden');
+        }
+
+        function desligarCarregando() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.add('hidden'); 
         }
 </script>
 </body>
