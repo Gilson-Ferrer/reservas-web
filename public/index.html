@@ -16,7 +16,7 @@
 </head>
 <body class="bg-gray-50 font-sans min-h-screen flex items-center justify-center p-4">
     
-    <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999] opacity-0 pointer-events-none transition-opacity duration-200">
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999] hidden">
         <div class="w-12 h-12 border-4 border-gray-200 border-t-[#249545] rounded-full animate-spin"></div>
     </div>
     <div class="bg-white rounded-lg shadow-xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row">
@@ -234,14 +234,12 @@
 
         function ligarCarregando() {
             const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.remove('opacity-0', 'pointer-events-none');
-            overlay.classList.add('opacity-100', 'pointer-events-auto');
+            overlay.classList.remove('hidden');
         }
 
         function desligarCarregando() {
             const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.remove('opacity-100', 'pointer-events-auto');
-            overlay.classList.add('opacity-0', 'pointer-events-none');
+            overlay.classList.add('hidden'); 
         }
 
     </script>
