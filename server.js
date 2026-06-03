@@ -48,13 +48,12 @@ fastify.addHook('onRequest', async (request, reply) => {
     if (request.headers['user-agent']?.includes('Render')) return; 
 
     if (process.env.NODE_ENV === 'production') {
-        const host = request.headers.host;
-        const cfIp = request.headers['cf-connecting-ip'];
-        const remoteIp = request.socket.remoteAddress;
-        const ipOrigemValido = request.headers['x-forwarded-for'] || remoteIp;
+        const host = request.headers.host || '';
+        
+        const cfIp = request.headers['cf-connecting-ip'] || request.headers['CF-Connecting-IP'];
 
         if (!cfIp || host.includes('onrender.com')) {
-            console.warn(`[BLOQUEIO DE SEGURANÇA] Tentativa de bypass ${host}`);
+            console.warn(`[BLOQUEIO DE SEGURANÇA] Tentativa de bypass Host: ${host} | Tem CF-IP? ${!!cfIp}`);
             return reply.status(403).send({ 
                 success: false, 
                 message: "Acesso proibido." 
