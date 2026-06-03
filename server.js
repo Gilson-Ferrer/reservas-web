@@ -49,15 +49,18 @@ fastify.addHook('onRequest', async (request, reply) => {
 
     if (process.env.NODE_ENV === 'production') {
         const host = request.headers.host || '';
-        
         const cfIp = request.headers['cf-connecting-ip'] || request.headers['CF-Connecting-IP'];
 
-        if (!cfIp || host.includes('onrender.com')) {
-            console.warn(`[BLOQUEIO DE SEGURANÇA] Tentativa de bypass Host: ${host} | Tem CF-IP? ${!!cfIp}`);
-            return reply.status(403).send({ 
-                success: false, 
-                message: "Acesso proibido." 
-            });
+        // Se a requisição veio pela URL crua da render, bloqueia obrigatoriamente
+        if (host.includes('onrender.com')) {
+            console.warn(`[BLOQUEIO] Tentativa de acesso direto via OnRender: ${host}`);
+            return reply.status(403).send({ success: false, message: "Acesso proibido." });
+        }
+
+        // Se veio pelo domínio oficial, mas a Cloudflare ainda não propagou o IP (cfIp é false), 
+        // vamos DEIXAR PASSAR por enquanto para você testar o login com o banco Oracle!
+        if (!cfIp) {
+            console.info(`[AVISO] Acesso ao domínio oficial sem cabeçalho Cloudflare (Aguardando propagação DNS).`);
         }
     }
 });
