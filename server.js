@@ -9,6 +9,8 @@ const helmet = require('@fastify/helmet');
 
 const JWT_SECRET = process.env.JWT_SECRET; 
 const saltRounds = 10;
+const path = require('path');
+const fastifyStatic = require('@fastify/static');
 oracledb.thin = true;
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT; 
 
@@ -75,6 +77,10 @@ fastify.register(cors, {
   methods: ["POST", "GET", "PUT", "DELETE", "OPTIONS"]
 });
 
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, 'public'), 
+  prefix: '/', 
+});
 
 fastify.get('/', async () => ({ status: 'online', service: 'SIA-ESTACIO-API' }));
 
