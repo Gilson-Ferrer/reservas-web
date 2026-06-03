@@ -259,16 +259,17 @@
                     if (result.success) {
                         minhasReservas = minhasReservas.filter(res => res.id !== id);
                         renderizarReservas();
-                        checarDisponibilidadeHorarios();
+                        await checarDisponibilidadeHorarios();
+                        desligarCarregando(); 
                         alert("Agendamento removido com sucesso.");
                     } else {
+                        desligarCarregando(); 
                         alert(result.message);
                     }
                 } catch (err) {
+                    desligarCarregando(); 
                     alert("Erro ao conectar com o servidor para exclusão.");
-                } finally {
-                desligarCarregando(); 
-                }
+                } 
             }
         }
 
@@ -307,28 +308,31 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    
                     alert(result.message);
                     
                     document.getElementById('hora-inicio').value = '';
                     document.getElementById('hora-fim').value = '';
                     
                     await carregarHistoricoDoBanco(); 
-                    checarDisponibilidadeHorarios();
+                    await checarDisponibilidadeHorarios();
+                    desligarCarregando(); 
 
                 } else {
+                    desligarCarregando(); 
                     alert(result.message || 'Falha ao processar reserva.');
                 }
             } catch (err) {
+                desligarCarregando(); 
                 console.error(err);
                 alert("Não foi possível estabelecer contato com a API do SisReserva.");
-            } finally {
-                desligarCarregando(); 
             }
         });
 
 
         async function carregarHistoricoDoBanco() {
             try {
+                ligarCarregando();
                 const response = await fetch('/api/agendamentos/meus', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -348,6 +352,8 @@
                 }
             } catch (err) {
                 console.error("Não foi possível carregar o histórico inicial:", err);
+            } finally {
+                desligarCarregando();
             }
         }
 
@@ -355,6 +361,7 @@
             const selectElement = document.getElementById('select-lab');
             
             try {
+                ligarCarregando();
                 const response = await fetch('/api/laboratorios', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -379,6 +386,8 @@
             } catch (err) {
                 selectElement.innerHTML = '<option value="" disabled selected>Erro de conexão com o servidor</option>';
                 console.error("Falha de rede ao buscar laboratórios:", err);
+            } finally {
+                desligarCarregando();
             }
         }
 
@@ -421,16 +430,17 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    desligarCarregando();
                     alert("Senha atualizada com sucesso.");
                     fecharModalSenha();
                 } else {
+                    desligarCarregando();
                     alert(result.message || "Não foi possível atualizar a senha.");
                 }
             } catch (err) {
+                desligarCarregando();
                 console.error(err);
                 alert("Erro de rede ao tentar atualizar a senha.");
-            } finally {
-                desligarCarregando(); 
             }
         });
 
@@ -456,6 +466,8 @@
                 alert("Você não possui nenhum agendamento ativo para gerar o relatório.");
                 return;
             }
+            
+            ligarCarregando();
 
             const nomeProfessor = usuarioLogado.nome || 'Responsável';
             document.getElementById('print-professor-nome').innerText = nomeProfessor;
@@ -473,6 +485,7 @@
                 `;
             }).join('');
 
+            desligarCarregando();
             setTimeout(() => {
                 window.print();
             }, 150);

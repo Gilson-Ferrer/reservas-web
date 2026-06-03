@@ -349,20 +349,21 @@
                     alert(result.message);
                     input.value = '';
                     await buscarLaboratoriosDoBanco();
+                    desligarCarregando();
                 } else {
+                    desligarCarregando();
                     alert(result.message || "Falha ao registrar espaço.");
                 }
             } catch (err) {
-                alert("Erro de conexão ao salvar laboratório.");
-            } finally {
-    
                 desligarCarregando();
+                alert("Erro de conexão ao salvar laboratório.");
             }
         });
 
         async function removerLaboratorio(id, nome) {
             if (confirm(`Deseja realmente remover de forma permanente o espaço "${nome}" da unidade?`)) {
                 try {
+                    ligarCarregando();
                     const response = await fetch(`/api/laboratorios/remover/${id}`, {
                         method: 'PUT',
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -372,10 +373,13 @@
                     if (result.success) {
                         alert(result.message);
                         await buscarLaboratoriosDoBanco();
+                        desligarCarregando();
                     } else {
+                        desligarCarregando();
                         alert(result.message);
                     }
                 } catch (err) {
+                    desligarCarregando();
                     alert("Erro de conexão ao remover laboratório do servidor.");
                 }
             }
@@ -394,6 +398,7 @@
             const areaBalanco = document.getElementById('print-balanco-area');
 
             try {
+                ligarCarregando();
                 const response = await fetch(`/api/admin/agendamentos-hoje?data=${dataEscolhida}`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -411,15 +416,16 @@
                     tbodyPrint.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 16px; color: #6b7280; border: 1px solid #d1d5db;">Nenhum agendamento realizado para esta data.</td></tr>`;
                 }
 
-
                 areaBalanco.classList.remove('imprimir-balanco-ativo');
                 areaAgenda.classList.add('imprimir-agenda-ativa');
 
+                desligarCarregando();
                 setTimeout(() => {
                     window.print();
                 }, 150);
 
             } catch (err) {
+                desligarCarregando();
                 alert("Erro ao buscar dados da agenda.");
             }
         }
@@ -461,16 +467,17 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    desligarCarregando(); 
                     alert("Senha do Administrador atualizada com sucesso.");
                     fecharModalSenhaAdmin();
                 } else {
+                    desligarCarregando(); 
                     alert(result.message || "Erro ao modificar credencial.");
                 }
             } catch (err) {
+                desligarCarregando(); 
                 console.error(err);
                 alert("Erro de rede ao conectar com o servidor.");
-            }finally {
-                desligarCarregando(); 
             }
         });
 
@@ -517,19 +524,20 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    desligarCarregando();
                     alert(result.message);
                     
                     document.getElementById('docente-nome').value = '';
                     document.getElementById('docente-email').value = '';
                     document.getElementById('docente-senha').value = '';
                 } else {
+                    desligarCarregando();
                     alert(result.message || "Não foi possível cadastrar o docente.");
                 }
             } catch (err) {
+                desligarCarregando();
                 console.error(err);
                 alert("Erro de conexão com o servidor ao registrar novo docente.");
-            } finally {
-                desligarCarregando();
             }
         });
 
