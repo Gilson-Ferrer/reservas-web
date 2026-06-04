@@ -644,6 +644,27 @@ fastify.post('/api/admin/docentes/cadastrar', { preHandler: [validarToken] }, as
     }
 });
 
+/* ==========================
+   HEALTH CHECK
+   ==========================*/
+app.get('/api/health-check', async (req, res) => {
+    let connection;
+    try {
+        connection = await oracledb.getConnection();
+
+        await connection.execute(`SELECT 1 FROM DUAL`);
+        
+        res.status(200).json({ success: true, message: "Sistema ativo!" });
+    } catch (err) {
+        console.error("Erro no Health Check:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        if (connection) {
+            try { await connection.close(); } catch (e) { console.error(e); }
+        }
+    }
+});
+
 const start = async () => {
   try {
     const port = process.env.PORT || 10000;
