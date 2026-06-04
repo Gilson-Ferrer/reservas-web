@@ -14,6 +14,11 @@
         .hover-estacio-azul:hover { background-color: #0052a3; }
         #print-area { display: none; }
 
+        /* Customização para a tabela de blocos rolar suave no mobile */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
         @media print {
             body * { display: none !important; }
             #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
@@ -28,70 +33,78 @@
     <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999] hidden">
         <div class="w-12 h-12 border-4 border-gray-200 border-t-[#249545] rounded-full animate-spin"></div>
     </div>
+    
     <header class="bg-white shadow-sm border-b border-gray-200 no-print">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex justify-center mb-3">
-                    <img src="assets/estacio-logo.png" alt="Logotipo Estácio" class="h-5 w-auto object-contain">
-                </div>
-                <div class="flex items-center gap-4">
-                    <span class="text-xs text-gray-600 hidden sm:inline">Olá, <strong id="prof-nome"></strong></span>
-                    <button onclick="abrirModalSenha()" class="text-gray-500 hover:text-blue-600 transition text-sm cursor-pointer" title="Alterar Senha">
-                        <i class="fa-solid fa-gear"></i> Alterar Senha
-                    </button>
-                    <button onclick="efetuarLogout()" class="text-gray-500 hover:text-red-600 transition text-sm cursor-pointer flex items-center gap-1">
-                        <i class="fa-solid fa-right-from-bracket"></i> Sair
-                    </button>
-                </div>
+            <div class="flex justify-center mb-3">
+                <img src="assets/estacio-logo.png" alt="Logotipo Estácio" class="h-5 w-auto object-contain">
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-xs text-gray-600 hidden sm:inline">Olá, <strong id="prof-nome"></strong></span>
+                <button onclick="abrirModalSenha()" class="text-gray-500 hover:text-blue-600 transition text-sm cursor-pointer" title="Alterar Senha">
+                    <i class="fa-solid fa-gear"></i> Alterar Senha
+                </button>
+                <button onclick="efetuarLogout()" class="text-gray-500 hover:text-red-600 transition text-sm cursor-pointer flex items-center gap-1">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair
+                </button>
+            </div>
         </div>
     </header>
+
     <main class="max-w-4xl mx-auto px-4 mt-6 space-y-6 no-print">
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
             <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-calendar-plus text-estacio-azul"></i> Nova Reserva de Laboratório
+                <i class="fa-solid fa-th text-estacio-azul"></i> Painel de Agendamento por Matriz
             </h2>
             
             <form id="form-reserva" class="space-y-5">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                        1. Selecione o Laboratório
-                    </label>
-                    <select id="select-lab" required class="w-full border border-gray-300 rounded-md p-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" disabled selected>Carregando...</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                        2. Selecione a Data
+                        1. Selecione a Data de Trabalho
                     </label>
                     <input type="date" id="data-reserva" required class="w-full border border-gray-300 rounded-md p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div id="painel-disponibilidade" class="hidden bg-slate-50 border border-slate-200 rounded-md p-4">
-                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                        <i class="fa-regular fa-clock text-estacio-azul"></i> Horários reservados para este dia:
-                    </h3>
-                    <div id="status-horarios" class="text-xs text-gray-600 space-y-1"></div>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Horário Início</label>
-                        <input type="time" id="hora-inicio" min="07:00" max="23:00" required 
-                            class="w-full border border-gray-300 rounded-md p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] bg-white max-sm:[letter-spacing:-0.03em] max-sm:text-sm">
+
+                <div id="wrapper-grade" class="hidden space-y-3">
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        2. Escolha os Blocos Disponíveis (Matriz Laboratório x Horário)
+                    </label>
+                    
+                    <div class="overflow-x-auto custom-scrollbar border border-gray-200 rounded-lg bg-white">
+                        <table class="w-full text-left border-collapse min-w-[650px]">
+                            <thead>
+                                <tr class="bg-gray-100 border-b border-gray-200 text-[11px] font-bold text-gray-600 uppercase">
+                                    <th class="p-3 bg-gray-50 sticky left-0 border-r border-gray-200 z-10 w-24">Espaço</th>
+                                    <th class="p-3 text-center">07:00 - 08:00</th>
+                                    <th class="p-3 text-center">08:00 - 09:00</th>
+                                    <th class="p-3 text-center">09:00 - 10:00</th>
+                                    <th class="p-3 text-center">19:00 - 20:00</th>
+                                    <th class="p-3 text-center">20:00 - 21:00</th>
+                                    <th class="p-3 text-center">21:00 - 22:00</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matrix-table-body" class="text-xs">
+                                </tbody>
+                        </table>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Horário Fim</label>
-                        <input type="time" id="hora-fim" min="07:00" max="23:00" required 
-                            class="w-full border border-gray-300 rounded-md p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] bg-white max-sm:[letter-spacing:-0.03em] max-sm:text-sm">
+                    
+                    <div class="flex flex-wrap gap-4 text-[11px] font-medium text-gray-500 pt-1">
+                        <div class="flex items-center gap-1.5"><div class="w-3_5 h-3_5 bg-white border border-gray-300 rounded"></div> Livre</div>
+                        <div class="flex items-center gap-1.5"><div class="w-3_5 h-3_5 bg-blue-600 rounded"></div> Selecionado por Você</div>
+                        <div class="flex items-center gap-1.5"><div class="w-3_5 h-3_5 bg-red-100 border border-red-200 rounded"></div> Ocupado por outro Docente</div>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-estacio-azul text-white py-2.5 rounded-md font-semibold hover-estacio-azul transition shadow-md text-sm cursor-pointer">
-                    Confirmar Agendamento
+
+                <button type="submit" id="btn-submit-reserva" disabled class="w-full bg-gray-300 text-gray-500 py-2.5 rounded-md font-semibold transition text-sm cursor-not-allowed">
+                    Selecione os blocos na matriz acima
                 </button>
             </form>
         </section>
+
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-estacio-azul"></i> Minhas Reservas
+                    <i class="fa-solid fa-clock-rotate-left text-estacio-azul"></i> Minhas Reservas Semestrais
                 </h2>
                 <button onclick="imprimirGradeCompleta()" class="text-xs font-semibold text-gray-600 bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50 cursor-pointer flex items-center gap-1.5 shadow-xs">
                     <i class="fa-solid fa-print text-estacio-azul"></i> Imprimir Comprovante
@@ -100,13 +113,13 @@
             <div id="lista-agendamentos" class="space-y-3"></div>
         </section>
     </main>
+
     <div id="modal-senha" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
             <h3 class="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
                 <i class="fa-solid fa-key text-estacio-azul"></i> Atualizar Senha
             </h3>
             <p class="text-xs text-gray-500 mb-4">A nova senha deve conter no mínimo 8 caracteres.</p>
-            
             <form id="form-alterar-senha" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nova Senha</label>
@@ -128,13 +141,13 @@
             </form>
         </div>
     </div>
+
     <div id="print-area" class="p-4 bg-white text-black font-sans">
         <div style="text-align: center; margin-bottom: 24px;">
             <h1 style="font-size: 18px; font-weight: bold; text-transform: uppercase; color: #1f2937;">Comprovante de Agendamento</h1>
             <p style="font-size: 16px; color: #6b7280; font-weight: 500; margin-top: 2px;">Estácio Carapicuíba</p>
             <p style="font-size: 16px; color: #374151; margin-top: 8px;"><strong>Responsável:</strong> <span id="print-professor-nome">--</span></p>
         </div>
-        
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #d1d5db; font-size: 14px;">
             <thead>
                 <tr style="background-color: #f3f4f6;">
@@ -143,16 +156,14 @@
                     <th style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold; text-align: left; width: 150px;">Horário</th>
                 </tr>
             </thead>
-            <tbody id="print-table-body">
-                </tbody>
+            <tbody id="print-table-body"></tbody>
         </table>
-        
         <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center;">
             <p style="font-size: 10px; color: #9ca3af; font-family: monospace;">Documento gerado eletronicamente em conformidade com as regras operacionais da unidade.</p>
         </div>
     </div>
-    <script>
 
+    <script>
         const token = localStorage.getItem('sisreserva_token');
         const usuarioLogado = JSON.parse(localStorage.getItem('sisreserva_user') || '{}');
 
@@ -162,62 +173,217 @@
 
         document.getElementById('prof-nome').innerText = `${usuarioLogado.nome || 'Docente'}`;
 
-        const selectLab = document.getElementById('select-lab');
         const inputData = document.getElementById('data-reserva');
-        const painelDisponibilidade = document.getElementById('painel-disponibilidade');
-        const statusHorarios = document.getElementById('status-horarios');
+        const wrapperGrade = document.getElementById('wrapper-grade');
+        const matrixTableBody = document.getElementById('matrix-table-body');
+        const btnSubmitReserva = document.getElementById('btn-submit-reserva');
 
+        // Estrutura fixa dos blocos operacionais da Estácio
+        const blocosHorarios = [
+            { id: 1, inicio: "07:00", fim: "08:00" },
+            { id: 2, inicio: "08:00", fim: "09:00" },
+            { id: 3, inicio: "09:00", fim: "10:00" },
+            { id: 4, inicio: "19:00", fim: "20:00" },
+            { id: 5, inicio: "20:00", fim: "21:00" },
+            { id: 6, inicio: "21:00", fim: "22:00" }
+        ];
+
+        let listaLabs = [];
         let minhasReservas = [];
+        
+        // Guarda o bloco que o usuário está clicando no momento { lab: "Nome", blocos: [1, 2] }
+        let selecaoAtual = { lab: null, blocos: [] };
 
-        [selectLab, inputData].forEach(element => {
-            element.addEventListener('change', checarDisponibilidadeHorarios);
-        });
+        // Escuta a mudança de data para reconstruir a grade inteira
+        inputData.addEventListener('change', montarGradeDeDisponibilidade);
 
-
-        async function checarDisponibilidadeHorarios() {
-            const labEscolhido = selectLab.value;
+        async function montarGradeDeDisponibilidade() {
             const dataEscolhida = inputData.value;
-
-            if (!labEscolhido || !dataEscolhida) {
-                painelDisponibilidade.classList.add('hidden');
+            if (!dataEscolhida) {
+                wrapperGrade.classList.add('hidden');
                 return;
             }
 
             try {
                 ligarCarregando();
-                const response = await fetch(`/api/agendamentos/disponibilidade?lab=${encodeURIComponent(labEscolhido)}&data=${dataEscolhida}`, {
+                
+                // 1. Baixa os laboratórios cadastrados
+                const resLabs = await fetch('/api/laboratorios', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                const resultLabs = await resLabs.json();
+                if (!resultLabs.success) return;
+                listaLabs = resultLabs.laboratorios;
 
-                const result = await response.json();
-                painelDisponibilidade.classList.remove('hidden');
+                // Reset da seleção atual ao mudar de dia
+                selecaoAtual = { lab: null, blocos: [] };
+                atualizarBotaoSubmit();
 
-                if (!result.success) {
-                    statusHorarios.innerHTML = `<span class="text-red-600 font-semibold">${result.message}</span>`;
-                    return;
-                }
-
-                if (result.ocupacoes.length === 0) {
-                    statusHorarios.innerHTML = `<span class="text-green-600 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Totalmente livre de 07:00 às 23:00</span>`;
-                } else {
-                    let htmlOcupacoes = `<p class="text-gray-500 mb-1 font-medium">Intervalos já reservados por outros docentes:</p>`;
-                    result.ocupacoes.forEach(oc => {
-                        htmlOcupacoes += `
-                            <div class="flex items-center gap-2 text-amber-700 font-medium">
-                                <i class="fa-solid fa-ban text-xs"></i> Bloqueado: <strong>${oc.inicio} às ${oc.fim}</strong> (${oc.professor})
-                            </div>`;
+                // 2. Faz uma busca em lote ou varre os labs para mapear ocupações
+                // Para manter a compatibilidade exata com a sua API atual de checagem, buscamos os dados
+                let ocupacoesPorLab = {};
+                
+                for (let lab of listaLabs) {
+                    const resDisp = await fetch(`/api/agendamentos/disponibilidade?lab=${encodeURIComponent(lab.nome)}&data=${dataEscolhida}`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    htmlOcupacoes += `<p class="text-[11px] text-green-600 font-medium mt-1"><i class="fa-solid fa-circle-info"></i> Você pode reservar qualquer horário fora dos intervalos acima.</p>`;
-                    statusHorarios.innerHTML = htmlOcupacoes;
+                    const resultDisp = await resDisp.json();
+                    ocupacoesPorLab[lab.nome] = resultDisp.success ? resultDisp.ocupacoes : [];
                 }
+
+                // 3. Renderiza as linhas da tabela (Matrix)
+                wrapperGrade.classList.remove('hidden');
+                matrixTableBody.innerHTML = listaLabs.map(lab => {
+                    const ocupacoes = ocupacoesPorLab[lab.nome] || [];
+
+                    // Varre cada um dos 6 blocos de horários para ver se colide com agendamentos existentes
+                    const colunasHtml = blocosHorarios.map(bloco => {
+                        // Verifica se este bloco específico está dentro de algum intervalo bloqueado
+                        const estaOcupado = ocupacoes.some(oc => {
+                            return (bloco.inicio >= oc.inicio && bloco.fim <= oc.fim);
+                        });
+
+                        if (estaOcupado) {
+                            return `
+                                <td class="p-2 text-center">
+                                    <div class="bg-red-50 border border-red-200 text-red-700 font-semibold rounded py-2 cursor-not-allowed text-[10px]" title="Já reservado por outro docente">
+                                        <i class="fa-solid fa-ban"></i> Ocupado
+                                    </div>
+                                </td>`;
+                        } else {
+                            return `
+                                <td class="p-2 text-center">
+                                    <button type="button" 
+                                        onclick="alternarSelecaoBloco('${lab.nome}', ${bloco.id})"
+                                        id="btn-cell-${btoa(lab.nome).replace(/=/g,'')}-${blmoId(bloco.id)}"
+                                        class="w-full bg-white border border-gray-200 text-gray-700 py-2 rounded hover:bg-gray-50 font-medium transition cursor-pointer text-center block">
+                                        Livre
+                                    </button>
+                                </td>`;
+                        }
+                    }).join('');
+
+                    return `
+                        <tr class="border-b border-gray-100 hover:bg-gray-50/40">
+                            <td class="p-3 font-bold text-gray-800 bg-gray-50 border-r border-gray-200 sticky left-0 z-10 shadow-xs">${lab.nome}</td>
+                            ${colunasHtml}
+                        </tr>`;
+                }).join('');
+
             } catch (err) {
-                console.error("Erro ao checar horários:", err);
-                statusHorarios.innerHTML = `<span class="text-red-500">Erro de rede ao consultar cronograma.</span>`;
+                console.error("Erro ao construir matriz de reservas:", err);
             } finally {
                 desligarCarregando();
             }
         }
+
+        // Helper para o ID do botão não quebrar com espaços ou caracteres especiais
+        function blmoId(id) { return id; }
+
+        function alternarSelecaoBloco(labNome, blocoId) {
+            const idBotao = `btn-cell-${btoa(labNome).replace(/=/g,'')}-${blocoId}`;
+            const botao = document.getElementById(idBotao);
+
+            // Regra de UX: O professor só pode selecionar horários dentro de UM único laboratório por vez
+            if (selecaoAtual.lab && selecaoAtual.lab !== labNome) {
+                alert("Para reservar outro laboratório, desmarque primeiro os blocos atuais.");
+                return;
+            }
+
+            selecaoAtual.lab = labNome;
+
+            if (selecaoAtual.blocos.includes(blocoId)) {
+                // Remove o bloco clicado
+                selecaoAtual.blocos = selecaoAtual.blocos.filter(id => id !== blocoId);
+                botao.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                botao.classList.add('bg-white', 'text-gray-700', 'border-gray-200');
+                botao.innerText = "Livre";
+                
+                // Se limpou todos os blocos, libera para escolher outro lab
+                if (selecaoAtual.blocos.length === 0) {
+                    selecaoAtual.lab = null;
+                }
+            } else {
+                // Adiciona o bloco clicado
+                selecaoAtual.blocos.push(blocoId);
+                selecaoAtual.blocos.sort((a, b) => a - b); // Ordena para checar continuidade se quiser
+
+                botao.classList.remove('bg-white', 'text-gray-700', 'border-gray-200');
+                botao.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                botao.innerText = "Selecionado";
+            }
+
+            atualizarBotaoSubmit();
+        }
+
+        function atualizarBotaoSubmit() {
+            if (selecaoAtual.blocos.length === 0) {
+                btnSubmitReserva.disabled = true;
+                btnSubmitReserva.className = "w-full bg-gray-300 text-gray-500 py-2.5 rounded-md font-semibold transition text-sm cursor-not-allowed";
+                btnSubmitReserva.innerText = "Selecione os blocos na matriz acima";
+            } else {
+                btnSubmitReserva.disabled = false;
+                btnSubmitReserva.className = "w-full bg-estacio-azul text-white py-2.5 rounded-md font-semibold hover-estacio-azul transition shadow-md text-sm cursor-pointer";
+                btnSubmitReserva.innerText = `Confirmar Agendamento Semestral (${selecaoAtual.blocos.length} Bloco(s))`;
+            }
+        }
+
+        // SUBMIT DO FORMULÁRIO: Calcula os extremos e envia o formato aceito pela API
+        document.getElementById('form-reserva').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = inputData.value;
+            const lab = selecaoAtual.lab;
+
+            if (!lab || selecaoAtual.blocos.length === 0) return;
+
+            // Pega o menor bloco e o maior bloco selecionado para definir inicio e fim
+            const primeiroBlocoId = Math.min(...selecaoAtual.blocos);
+            const ultimoBlocoId = Math.max(...selecaoAtual.blocos);
+
+            const blocoInicio = blocosHorarios.find(b => b.id === primeiroBlocoId);
+            const blocoFim = blocosHorarios.find(b => b.id === ultimoBlocoId);
+
+            const inicio = blocoInicio.inicio;
+            const fim = blocoFim.fim;
+
+            // Validação de segurança de tempo retroativo
+            const agora = new Date();
+            if (new Date(`${data}T${inicio}:00`) < agora) {
+                alert("Operação negada: não é possível agendar um horário que já passou.");
+                return;
+            }
+
+            try {
+                ligarCarregando();
+                const response = await fetch('/api/agendamentos/reservar', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ lab, data, inicio, fim })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    // Recarrega o histórico e a grade para atualizar os blocos na tela
+                    await carregarHistoricoDoBanco(); 
+                    await montarGradeDeDisponibilidade();
+                } else {
+                    alert(result.message || 'Falha ao processar reserva.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Não foi possível estabelecer contato com a API do SisReserva.");
+            } finally {
+                desligarCarregando(); 
+            }
+        });
 
         function renderizarReservas() {
             const container = document.getElementById('lista-agendamentos');
@@ -261,79 +427,18 @@
                     if (result.success) {
                         minhasReservas = minhasReservas.filter(res => res.id !== id);
                         renderizarReservas();
-                        await checarDisponibilidadeHorarios();
- 
+                        if (inputData.value) await montarGradeDeDisponibilidade();
                         alert("Agendamento removido com sucesso.");
                     } else {
- 
                         alert(result.message);
                     }
                 } catch (err) { 
                     alert("Erro ao conectar com o servidor para exclusão.");
                 } finally {
-                desligarCarregando(); 
-            }
+                    desligarCarregando(); 
+                }
             }
         }
-
-        document.getElementById('form-reserva').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const lab = selectLab.value;
-            const data = inputData.value;
-            const inicio = document.getElementById('hora-inicio').value;
-            const fim = document.getElementById('hora-fim').value;
-
-            const agora = new Date();
-            const dataHoraReserva = new Date(`${data}T${inicio}:00`);
-
-            if (dataHoraReserva < agora) {
-                alert("Operação negada, data ou horário inválido.");
-                return;
-            }
-
-            if (inicio < "07:00" || fim > "23:00" || inicio >= fim) {
-                alert("Horário inválido! Escolha um intervalo de segunda a sábado, entre 07:00 e 23:00.");
-                return;
-            }
-
-            try {
-                ligarCarregando();
-                const response = await fetch('/api/agendamentos/reservar', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ lab, data, inicio, fim })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    
-                    alert(result.message);
-                    
-                    document.getElementById('hora-inicio').value = '';
-                    document.getElementById('hora-fim').value = '';
-                    
-                    await carregarHistoricoDoBanco(); 
-                    await checarDisponibilidadeHorarios();
-                     
-
-                } else {
-                     
-                    alert(result.message || 'Falha ao processar reserva.');
-                }
-            } catch (err) {
-                 
-                console.error(err);
-                alert("Não foi possível estabelecer contato com a API do SisReserva.");
-            } finally {
-                desligarCarregando(); 
-            }
-        });
-
 
         async function carregarHistoricoDoBanco() {
             try {
@@ -344,14 +449,9 @@
                 const result = await response.json();
                 
                 if (result.success) {
-    
                     minhasReservas = result.reservas.sort((a, b) => {
-                        const dataHoraA = new Date(`${a.data}T${a.inicio}:00`);
-                        const dataHoraB = new Date(`${b.data}T${b.inicio}:00`);
-                        
-                        return dataHoraA - dataHoraB;
+                        return new Date(`${a.data}T${a.inicio}:00`) - new Date(`${b.data}T${b.inicio}:00`);
                     });
-
                     renderizarReservas();
                 }
             } catch (err) {
@@ -359,159 +459,65 @@
             } 
         }
 
-        async function carregarLaboratoriosDoBanco() {
-            const selectElement = document.getElementById('select-lab');
-            
-            try {
-                ligarCarregando();
-                const response = await fetch('/api/laboratorios', {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                const result = await response.json();
-
-                if (result.success) {
-
-                    selectElement.innerHTML = '<option value="" disabled selected>Escolha o espaço...</option>';
-                    
-                    result.laboratorios.forEach(lab => {
-                        const option = document.createElement('option');
-                        option.value = lab.nome; 
-                        option.textContent = lab.nome; 
-                        selectElement.appendChild(option);
-                    });
-                } else {
-                    selectElement.innerHTML = '<option value="" disabled selected>Erro ao carregar espaços</option>';
-                    console.error("A API retornou um erro:", result.message);
-                }
-            } catch (err) {
-                selectElement.innerHTML = '<option value="" disabled selected>Erro de conexão com o servidor</option>';
-                console.error("Falha de rede ao buscar laboratórios:", err);
-            } finally {
-                desligarCarregando();
-            }
-        }
-
-
-        function abrirModalSenha() {
-            document.getElementById('modal-senha').classList.remove('hidden');
-        }
-
+        function abrirModalSenha() { document.getElementById('modal-senha').classList.remove('hidden'); }
         function fecharModalSenha() {
             document.getElementById('modal-senha').classList.add('hidden');
             document.getElementById('nova-senha-input').value = '';
-            
-            const inputSenha = document.getElementById('nova-senha-input');
-            const iconeOlho = document.getElementById('icone-olho-docente');
-            inputSenha.type = 'password';
-            iconeOlho.classList.remove('fa-eye-slash');
-            iconeOlho.classList.add('fa-eye');
         }
 
         document.getElementById('form-alterar-senha').addEventListener('submit', async function(e) {
             e.preventDefault();
             const novaSenha = document.getElementById('nova-senha-input').value;
-
-            if (novaSenha.length < 8) {
-                alert("Erro: A senha precisa ter no mínimo 8 caracteres.");
-                return;
-            }
+            if (novaSenha.length < 8) { alert("Erro: Mínimo 8 caracteres."); return; }
 
             try {
                 ligarCarregando();
                 const response = await fetch('/api/user/change-password', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ novaSenha })
                 });
-
                 const result = await response.json();
-
                 if (result.success) {
-                    
                     alert("Senha atualizada com sucesso.");
                     fecharModalSenha();
                 } else {
-                    
-                    alert(result.message || "Não foi possível atualizar a senha.");
+                    alert(result.message || "Não foi possível atualizar.");
                 }
             } catch (err) {
-                
-                console.error(err);
-                alert("Erro de rede ao tentar atualizar a senha.");
+                alert("Erro de rede.");
             } finally {
                 desligarCarregando(); 
             }
         });
 
         function alternarVisibilidadeSenha() {
-            const inputSenha = document.getElementById('nova-senha-input');
-            const iconeOlho = document.getElementById('icone-olho-docente');
-
-            if (inputSenha.type === 'password') {
-                inputSenha.type = 'text';
-                iconeOlho.classList.remove('fa-eye');
-                iconeOlho.classList.add('fa-eye-slash');
-            } else {
-                inputSenha.type = 'password';
-                iconeOlho.classList.remove('fa-eye-slash');
-                iconeOlho.classList.add('fa-eye');
-            }
+            const input = document.getElementById('nova-senha-input');
+            input.type = input.type === 'password' ? 'text' : 'password';
         }
-        carregarLaboratoriosDoBanco();
-        carregarHistoricoDoBanco();
 
         function imprimirGradeCompleta() {
-            if (!minhasReservas || minhasReservas.length === 0) {
-                alert("Você não possui nenhum agendamento ativo para gerar o relatório.");
-                return;
-            }
-            
+            if (minhasReservas.length === 0) { alert("Nenhum agendamento ativo."); return; }
             ligarCarregando();
-
-            const nomeProfessor = usuarioLogado.nome || 'Responsável';
-            document.getElementById('print-professor-nome').innerText = nomeProfessor;
-
+            document.getElementById('print-professor-nome').innerText = usuarioLogado.nome || 'Responsável';
             const tbody = document.getElementById('print-table-body');
-            
             tbody.innerHTML = minhasReservas.map(res => {
-                const dataBr = res.data.split('-').reverse().join('/');
-                return `
-                    <tr style="border-bottom: 1px solid #d1d5db;">
-                        <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 500; color: #1f2937;">${res.lab}</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; color: #374151; white-space: nowrap;">${dataBr}</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 600; color: #111827; white-space: nowrap;">${res.inicio} às ${res.fim}</td>
-                    </tr>
-                `;
+                return `<tr style="border-bottom: 1px solid #d1d5db;"><td style="border: 1px solid #d1d5db; padding: 10px;">${res.lab}</td><td style="border: 1px solid #d1d5db; padding: 10px;">${res.data.split('-').reverse().join('/')}</td><td style="border: 1px solid #d1d5db; padding: 10px; font-weight:600;">${res.inicio} às ${res.fim}</td></tr>`;
             }).join('');
-
             desligarCarregando();
-            setTimeout(() => {
-                window.print();
-            }, 150);
+            setTimeout(() => { window.print(); }, 150);
         }
 
         function efetuarLogout() {
-
-            localStorage.removeItem('sisreserva_token');
-            localStorage.removeItem('sisreserva_user');
-
+            localStorage.clear();
             window.location.href = 'index.html';
         }
 
-        function ligarCarregando() {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.remove('hidden');
-        }
+        function ligarCarregando() { document.getElementById('loadingOverlay').classList.remove('hidden'); }
+        function desligarCarregando() { document.getElementById('loadingOverlay').classList.add('hidden'); }
 
-        function desligarCarregando() {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.add('hidden'); 
-        }
-</script>
+        // Inicialização inicial
+        carregarHistoricoDoBanco();
+    </script>
 </body>
 </html>
