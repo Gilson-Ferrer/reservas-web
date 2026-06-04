@@ -86,10 +86,18 @@
                         </table>
                     </div>
                     
-                    <div class="flex flex-wrap gap-4 text-[11px] font-medium text-gray-500 pt-1">
-                        <div class="flex items-center gap-1.5"><div class="w-3_5 h-3_5 bg-white border border-gray-300 rounded"></div> Livre</div>
-                        <div class="flex items-center gap-1.5"><div class="w-3_5 h-3_5 bg-blue-600 rounded"></div> Selecionado por Você</div>
-                        <div class="flex items-center gap-1.5"><div class="w-3_5 h-3_5 bg-red-100 border border-red-200 rounded"></div> Ocupado por outro Docente</div>
+                <div class="flex flex-wrap gap-3 text-[11px] font-semibold pt-2">
+                        <div class="flex items-center gap-1">
+                            <span class="bg-white border border-gray-200 text-gray-700 px-3 py-1 rounded shadow-2xs">Livre</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-1">
+                            <span class="bg-blue-600 border border-blue-600 text-white px-3 py-1 rounded shadow-sm">Selecionado</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-1">
+                            <span class="bg-red-50 border border-red-200 text-red-700 px-3 py-1 rounded">Ocupado</span>
+                        </div>
                     </div>
                 </div>
 
@@ -316,11 +324,11 @@
             if (selecaoAtual.blocos.length === 0) {
                 btnSubmitReserva.disabled = true;
                 btnSubmitReserva.className = "w-full bg-gray-300 text-gray-500 py-2.5 rounded-md font-semibold transition text-sm cursor-not-allowed";
-                btnSubmitReserva.innerText = "Selecione os blocos na matriz acima";
+                btnSubmitReserva.innerText = "Selecione os horários livres acima";
             } else {
                 btnSubmitReserva.disabled = false;
                 btnSubmitReserva.className = "w-full bg-estacio-azul text-white py-2.5 rounded-md font-semibold hover-estacio-azul transition shadow-md text-sm cursor-pointer";
-                btnSubmitReserva.innerText = `Confirmar Agendamento Semestral (${selecaoAtual.blocos.length} Bloco(s))`;
+                btnSubmitReserva.innerText = `Confirmar Agendamento`;
             }
         }
 
@@ -363,14 +371,17 @@
 
                 if (result.success) {
                     alert(result.message);
-                    await carregarHistoricoDoBanco(); 
-                    await montarGradeDeDisponibilidade();
-                } else {
+ 
+                    await Promise.all([
+                        carregarHistoricoDoBanco(),
+                        montarGradeDeDisponibilidade()
+                    ]);
+                }else {
                     alert(result.message || 'Falha ao processar reserva.');
                 }
             } catch (err) {
                 console.error(err);
-                alert("Não foi possível estabelecer contato com a API do SisReserva.");
+                alert("Não foi possível estabelecer contato com a API do SRL.");
             } finally {
                 desligarCarregando(); 
             }
@@ -406,7 +417,7 @@
         }
 
         async function cancelarReserva(id) {
-            if (confirm("Deseja realmente cancelar este agendamento semestral?")) {
+            if (confirm("Deseja realmente cancelar este agendamento?")) {
                 try {
                     ligarCarregando();
                     const response = await fetch(`/api/agendamentos/cancelar/${id}`, {
