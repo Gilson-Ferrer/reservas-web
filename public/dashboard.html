@@ -13,8 +13,6 @@
         .border-estacio-azul { border-color: #0066cc; }
         .hover-estacio-azul:hover { background-color: #0052a3; }
         #print-area { display: none; }
-
-        /* Customização para a tabela de blocos rolar suave no mobile */
         .custom-scrollbar::-webkit-scrollbar { height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -54,20 +52,20 @@
     <main class="max-w-4xl mx-auto px-4 mt-6 space-y-6 no-print">
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
             <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-th text-estacio-azul"></i> Painel de Agendamento por Matriz
+                <i class="fa-solid fa-th text-estacio-azul"></i> Sistema de Agendamento
             </h2>
             
             <form id="form-reserva" class="space-y-5">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                        1. Selecione a Data de Trabalho
+                        1. Selecione a Data
                     </label>
                     <input type="date" id="data-reserva" required class="w-full border border-gray-300 rounded-md p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div id="wrapper-grade" class="hidden space-y-3">
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        2. Escolha os Blocos Disponíveis (Matriz Laboratório x Horário)
+                        2. Selecione os horários
                     </label>
                     
                     <div class="overflow-x-auto custom-scrollbar border border-gray-200 rounded-lg bg-white">
@@ -96,7 +94,7 @@
                 </div>
 
                 <button type="submit" id="btn-submit-reserva" disabled class="w-full bg-gray-300 text-gray-500 py-2.5 rounded-md font-semibold transition text-sm cursor-not-allowed">
-                    Selecione os blocos na matriz acima
+                    Selecione os horários acima
                 </button>
             </form>
         </section>
@@ -104,7 +102,7 @@
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-estacio-azul"></i> Minhas Reservas Semestrais
+                    <i class="fa-solid fa-clock-rotate-left text-estacio-azul"></i> Minhas Reservas
                 </h2>
                 <button onclick="imprimirGradeCompleta()" class="text-xs font-semibold text-gray-600 bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50 cursor-pointer flex items-center gap-1.5 shadow-xs">
                     <i class="fa-solid fa-print text-estacio-azul"></i> Imprimir Comprovante
@@ -178,7 +176,6 @@
         const matrixTableBody = document.getElementById('matrix-table-body');
         const btnSubmitReserva = document.getElementById('btn-submit-reserva');
 
-        // Estrutura fixa dos blocos operacionais da Estácio
         const blocosHorarios = [
             { id: 1, inicio: "07:00", fim: "08:00" },
             { id: 2, inicio: "08:00", fim: "09:00" },
@@ -190,11 +187,9 @@
 
         let listaLabs = [];
         let minhasReservas = [];
-        
-        // Guarda o bloco que o usuário está clicando no momento { lab: "Nome", blocos: [1, 2] }
+
         let selecaoAtual = { lab: null, blocos: [] };
 
-        // Escuta a mudança de data para reconstruir a grade inteira
         inputData.addEventListener('change', montarGradeDeDisponibilidade);
 
         async function montarGradeDeDisponibilidade() {
@@ -206,8 +201,7 @@
 
             try {
                 ligarCarregando();
-                
-                // 1. Baixa os laboratórios cadastrados
+
                 const resLabs = await fetch('/api/laboratorios', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -216,31 +210,34 @@
                 if (!resultLabs.success) return;
                 listaLabs = resultLabs.laboratorios;
 
-                // Reset da seleção atual ao mudar de dia
                 selecaoAtual = { lab: null, blocos: [] };
                 atualizarBotaoSubmit();
 
-                // 2. Faz uma busca em lote ou varre os labs para mapear ocupações
-                // Para manter a compatibilidade exata com a sua API atual de checagem, buscamos os dados
-                let ocupacoesPorLab = {};
-                
-                for (let lab of listaLabs) {
-                    const resDisp = await fetch(`/api/agendamentos/disponibilidade?lab=${encodeURIComponent(lab.nome)}&data=${dataEscolhida}`, {
-                        method: 'GET',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const resultDisp = await resDisp.json();
-                    ocupacoesPorLab[lab.nome] = resultDisp.success ? resultDisp.ocupacoes : [];
-                }
+                const promessasDeBusca = listaLabs.map(async (lab) => {
+                    try {
+                        const resDisp = await fetch(`/api/agendamentos/disponibilidade?lab=${encodeURIComponent(lab.nome)}&data=${dataEscolhida}`, {
+                            method: 'GET',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const resultDisp = await resDisp.json();
+                        return { labNome: lab.nome, ocupacoes: resultDisp.success ? resultDisp.ocupacoes : [] };
+                    } catch (e) {
+                        return { labNome: lab.nome, ocupacoes: [] };
+                    }
+                });
 
-                // 3. Renderiza as linhas da tabela (Matrix)
+                const resultadosOcupacoes = await Promise.all(promessasDeBusca);
+
+                let ocupacoesPorLab = {};
+                resultadosOcupacoes.forEach(item => {
+                    ocupacoesPorLab[item.labNome] = item.ocupacoes;
+                });
+
                 wrapperGrade.classList.remove('hidden');
                 matrixTableBody.innerHTML = listaLabs.map(lab => {
                     const ocupacoes = ocupacoesPorLab[lab.nome] || [];
 
-                    // Varre cada um dos 6 blocos de horários para ver se colide com agendamentos existentes
                     const colunasHtml = blocosHorarios.map(bloco => {
-                        // Verifica se este bloco específico está dentro de algum intervalo bloqueado
                         const estaOcupado = ocupacoes.some(oc => {
                             return (bloco.inicio >= oc.inicio && bloco.fim <= oc.fim);
                         });
@@ -279,14 +276,12 @@
             }
         }
 
-        // Helper para o ID do botão não quebrar com espaços ou caracteres especiais
         function blmoId(id) { return id; }
 
         function alternarSelecaoBloco(labNome, blocoId) {
             const idBotao = `btn-cell-${btoa(labNome).replace(/=/g,'')}-${blocoId}`;
             const botao = document.getElementById(idBotao);
 
-            // Regra de UX: O professor só pode selecionar horários dentro de UM único laboratório por vez
             if (selecaoAtual.lab && selecaoAtual.lab !== labNome) {
                 alert("Para reservar outro laboratório, desmarque primeiro os blocos atuais.");
                 return;
@@ -295,20 +290,19 @@
             selecaoAtual.lab = labNome;
 
             if (selecaoAtual.blocos.includes(blocoId)) {
-                // Remove o bloco clicado
+
                 selecaoAtual.blocos = selecaoAtual.blocos.filter(id => id !== blocoId);
                 botao.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
                 botao.classList.add('bg-white', 'text-gray-700', 'border-gray-200');
                 botao.innerText = "Livre";
-                
-                // Se limpou todos os blocos, libera para escolher outro lab
+
                 if (selecaoAtual.blocos.length === 0) {
                     selecaoAtual.lab = null;
                 }
             } else {
-                // Adiciona o bloco clicado
+
                 selecaoAtual.blocos.push(blocoId);
-                selecaoAtual.blocos.sort((a, b) => a - b); // Ordena para checar continuidade se quiser
+                selecaoAtual.blocos.sort((a, b) => a - b); 
 
                 botao.classList.remove('bg-white', 'text-gray-700', 'border-gray-200');
                 botao.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
@@ -330,7 +324,7 @@
             }
         }
 
-        // SUBMIT DO FORMULÁRIO: Calcula os extremos e envia o formato aceito pela API
+
         document.getElementById('form-reserva').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -339,7 +333,6 @@
 
             if (!lab || selecaoAtual.blocos.length === 0) return;
 
-            // Pega o menor bloco e o maior bloco selecionado para definir inicio e fim
             const primeiroBlocoId = Math.min(...selecaoAtual.blocos);
             const ultimoBlocoId = Math.max(...selecaoAtual.blocos);
 
@@ -349,7 +342,6 @@
             const inicio = blocoInicio.inicio;
             const fim = blocoFim.fim;
 
-            // Validação de segurança de tempo retroativo
             const agora = new Date();
             if (new Date(`${data}T${inicio}:00`) < agora) {
                 alert("Operação negada: não é possível agendar um horário que já passou.");
@@ -371,7 +363,6 @@
 
                 if (result.success) {
                     alert(result.message);
-                    // Recarrega o histórico e a grade para atualizar os blocos na tela
                     await carregarHistoricoDoBanco(); 
                     await montarGradeDeDisponibilidade();
                 } else {
@@ -516,7 +507,6 @@
         function ligarCarregando() { document.getElementById('loadingOverlay').classList.remove('hidden'); }
         function desligarCarregando() { document.getElementById('loadingOverlay').classList.add('hidden'); }
 
-        // Inicialização inicial
         carregarHistoricoDoBanco();
     </script>
 </body>
