@@ -235,7 +235,7 @@ fastify.post('/api/agendamentos/reservar', { preHandler: [validarToken] }, async
     }
 
     const instanteAtual = new Date();
-    const instanteReserva = new Date(`${data}T${inicio}:00`);
+    const instanteReserva = new Date(`${data}T${inicio}:00-03:00`);
 
     if (instanteReserva < instanteAtual) {
         console.warn(`[BLOQUEIO RETROATIVO] Tentativa de agendamento passado negada para o User ID: ${userId}`);
@@ -326,7 +326,7 @@ fastify.delete('/api/agendamentos/cancelar/:id', { preHandler: [validarToken] },
 
         const agendamento = resCheck.rows[0];
         
-        const dataHoraAgendamento = new Date(`${agendamento.DATA}T${agendamento.HORARIO_INICIO}:00`);
+        const dataHoraAgendamento = new Date(`${agendamento.DATA}T${agendamento.HORARIO_INICIO}:00-03:00`);
         const agora = new Date();
 
         const diferencaHoras = (dataHoraAgendamento - agora) / (1000 * 60 * 60);

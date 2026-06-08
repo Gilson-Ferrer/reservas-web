@@ -350,7 +350,7 @@
             const fim = blocoFim.fim;
 
             const agora = new Date();
-            if (new Date(`${data}T${inicio}:00`) < agora) {
+            if (new Date(`${data}T${inicio}:00-03:00`) < agora) {
                 alert("Operação negada: não é possível agendar um horário que já passou.");
                 return;
             }
