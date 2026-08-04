@@ -675,4 +675,70 @@ const start = async () => {
   }
 };
 
+/* ==========================================
+   LISTAR TODOS OS DOCENTES
+   ==========================================*/
+fastify.get('/api/admin/docentes', { preHandler: [validarToken] }, async (request, reply) => {
+    const { role, unidadeId } = request.user;
+    if (role !== 'ADMIN') return reply.status(403).send({ success: false, message: "Acesso negado." });
+
+    let connection;
+    try {
+        connection = await getDbConnection();
+        const sql = `SELECT USUARIO_ID, NOME, EMAIL, STATUS 
+                     FROM SISRESERVA_USUARIOS 
+                     WHERE UNIDADE_ID = :unidadeId AND ROLE IN ('PROFESSOR', 'DOCENTE')
+                     ORDER BY NOME ASC`;
+        const result = await connection.execute(sql, { unidadeId });
+        
+        const docentes = result.rows.map(row => ({
+            id: row.USUARIO_ID,
+            nome: row.NOME,
+            email: row.EMAIL,
+            status: row.STATUS
+        }));
+        return { success: true, docentes };
+    } catch (err) {
+        console.error("Erro ao listar docentes:", err);
+        return reply.status(500).send({ success: false, message: "Erro ao consultar lista de docentes." });
+    } finally {
+        if (connection) await connection.close();
+    }
+});
+
+/* ==========================================
+   ALTERAR SENHA 
+   ==========================================*/
+fastify.put('/api/admin/docentes/:id/senha', { preHandler: [validarToken] }, async (request, reply) => {
+    const { id } = request.params;
+    const { novaSenha } = request.body;
+    const { role, unidadeId } = request.user;
+
+    if (role !== 'ADMIN') return reply.status(403).send({ success: false, message: "Acesso negado." });
+    if (!novaSenha || novaSenha.length < 8) return reply.status(400).send({ success: false, message: "Senha inválida (Mínimo de 8 caracteres)." });
+
+    let connection;
+    try {
+        connection = await getDbConnection();
+        const hashGerado = await bcrypt.hash(novaSenha, 10);
+
+        const sql = `UPDATE SISRESERVA_USUARIOS 
+                     SET SENHA_HASH = :hashGerado 
+                     WHERE USUARIO_ID = :id AND UNIDADE_ID = :unidadeId AND ROLE IN ('PROFESSOR', 'DOCENTE')`;
+                     
+        const result = await connection.execute(sql, { hashGerado, id: Number(id), unidadeId }, { autoCommit: true });
+
+        if (result.rowsAffected === 0) {
+            return reply.status(404).send({ success: false, message: "Docente não encontrado." });
+        }
+
+        return { success: true, message: "Senha do docente atualizada com sucesso no banco de dados!" };
+    } catch (err) {
+        console.error("Erro ao alterar senha do docente:", err);
+        return reply.status(500).send({ success: false, message: "Erro interno do servidor." });
+    } finally {
+        if (connection) await connection.close();
+    }
+});
+
 start();
