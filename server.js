@@ -229,7 +229,7 @@ fastify.post('/api/agendamentos/reservar', { preHandler: [validarToken] }, async
     const unidadeId = request.user.unidadeId || request.user.UNIDADE_ID;
 
     console.log(`[DEBUG DASH] Tentativa de Reserva: Lab="${lab}" | Professor ID=${userId} | Unidade=${unidadeId}`);
-
+    
     if (!lab || !data || !inicio || !fim) {
         return reply.status(400).send({ success: false, message: "Todos os campos são obrigatórios." });
     }
@@ -242,6 +242,17 @@ fastify.post('/api/agendamentos/reservar', { preHandler: [validarToken] }, async
         return reply.status(400).send({ 
             success: false, 
             message: "Erro: Não é permitido agendar laboratórios para horários retroativos." 
+        });
+    }
+
+    const limiteMinimo = new Date();
+    limiteMinimo.setHours(limiteMinimo.getHours() + 24);
+
+    if (instanteReserva < limiteMinimo) {
+        console.warn(`[BLOQUEIO 24H] Tentativa negada de agendamento em cima da hora pelo User ID: ${userId}`);
+        return reply.status(400).send({ 
+            success: false, 
+            message: "Operação Recusada! O agendamento de laboratórios deve ser feito com no mínimo 24 horas de antecedência." 
         });
     }
 
