@@ -55,26 +55,36 @@
 
     <main class="max-w-5xl mx-auto px-4 mt-6 space-y-6 no-print">
         
-    <section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 text-left flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div class="space-y-2 w-full">
-                    <h3 class="font-bold text-gray-800">Agenda de Reservas</h3>
-                    <p class="text-xs text-gray-500">Selecione uma data para imprimir as reservas:</p>
-                    <input type="date" id="filtro-data-relatorio" class="border border-gray-300 rounded p-1.5 text-xs w-full sm:w-auto bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500">
+    <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 mt-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                <div class="space-y-2 w-full sm:w-auto">
+                    <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-day text-estacio-azul"></i> Agenda Diária de Laboratórios
+                    </h3>
+                    <p class="text-xs text-gray-500">Selecione a data para visualizar as reservas na tela e imprimir:</p>
+                    <input type="date" id="filtro-data-relatorio" onchange="carregarPreviaRelatorio()" 
+                           class="border border-gray-300 rounded p-1.5 text-sm w-full sm:w-auto bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500">
                 </div>
-                <button onclick="imprimirRelatorioDiario()" class="p-3.5 bg-blue-50 text-estacio-azul hover:bg-blue-100 transition rounded-md text-xl cursor-pointer self-end sm:self-center" title="Gerar Relatório">
-                    <i class="fa-solid fa-print"></i>
+                
+                <button onclick="imprimirRelatorioDiario()" id="btn-imprimir-relatorio" disabled
+                        class="px-4 py-2 bg-estacio-azul text-white hover-estacio-azul transition rounded-md text-sm cursor-pointer shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-print"></i> Imprimir
                 </button>
             </div>
 
-            <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 text-left flex items-center justify-between">
-                <div>
-                    <h3 class="font-bold text-gray-800">Status Geral por Período</h3>
-                    <p class="text-xs text-gray-500 mt-1">Percentuais calculados dinamicamente com base nas reservas.</p>
-                </div>
-                <div class="p-3 bg-teal-50 text-teal-600 rounded-md text-xl">
-                    <i class="fa-solid fa-chart-pie"></i>
-                </div>
+            <div class="overflow-x-auto custom-scrollbar border border-gray-200 rounded-lg mt-4">
+                <table class="w-full text-left border-collapse min-w-[500px]">
+                    <thead>
+                        <tr class="bg-gray-100 border-b border-gray-200 text-[11px] font-bold text-gray-600 uppercase">
+                            <th class="p-3">Laboratório</th>
+                            <th class="p-3">Professor</th>
+                            <th class="p-3 text-center">Horário</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-previa-relatorio" class="text-xs text-gray-700 bg-white">
+                        <tr><td colspan="3" class="p-4 text-center text-gray-500">Selecione uma data para visualizar as reservas.</td></tr>
+                    </tbody>
+                </table>
             </div>
         </section>
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
@@ -456,17 +466,17 @@
             } 
         }
 
-        async function imprimirRelatorioDiario() {
+        async function carregarPreviaRelatorio() {
             const dataEscolhida = document.getElementById('filtro-data-relatorio').value;
-            if (!dataEscolhida) { alert("Selecione uma data válida."); return; }
-
-            const dataObjeto = new Date(`${dataEscolhida}T00:00:00`);
-            const dataFormatadaBr = dataObjeto.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            document.getElementById('print-report-date').innerText = dataFormatadaBr;
-
+            const tbodyPrevia = document.getElementById('tabela-previa-relatorio');
             const tbodyPrint = document.getElementById('print-report-table-body');
-            const areaAgenda = document.getElementById('print-report-area');
-            const areaBalanco = document.getElementById('print-balanco-area');
+            const btnImprimir = document.getElementById('btn-imprimir-relatorio');
+
+            if (!dataEscolhida) {
+                tbodyPrevia.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-500">Selecione uma data acima para visualizar as reservas.</td></tr>`;
+                btnImprimir.disabled = true;
+                return;
+            }
 
             try {
                 ligarCarregando();
@@ -476,31 +486,51 @@
                 });
                 const result = await response.json();
 
+                const dataObjeto = new Date(`${dataEscolhida}T00:00:00-03:00`);
+                const dataFormatadaBr = dataObjeto.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('print-report-date').innerText = dataFormatadaBr;
+
                 if (result.success && result.agendamentos.length > 0) {
+                    tbodyPrevia.innerHTML = result.agendamentos.map(a => `
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="p-3 font-semibold text-gray-800">${a.lab}</td>
+                            <td class="p-3 text-gray-600">${a.prof}</td>
+                            <td class="p-3 text-center font-bold text-estacio-azul">${a.hora}</td>
+                        </tr>`).join('');
+
                     tbodyPrint.innerHTML = result.agendamentos.map(a => `
                         <tr style="border-bottom: 1px solid #d1d5db;">
                             <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 500; color: #1f2937;">${a.lab}</td>
                             <td style="border: 1px solid #d1d5db; padding: 10px; color: #374151;">${a.prof}</td>
-                            <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 600; color: #111827; white-space: nowrap;">${a.hora}</td>
+                            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center; font-weight: 600; color: #111827; white-space: nowrap;">${a.hora}</td>
                         </tr>`).join('');
+                    
+                    btnImprimir.disabled = false;
                 } else {
+                    const msgVazia = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhum agendamento realizado para esta data.</td></tr>';
+                    tbodyPrevia.innerHTML = msgVazia;
                     tbodyPrint.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 16px; color: #6b7280; border: 1px solid #d1d5db;">Nenhum agendamento realizado para esta data.</td></tr>`;
+                    
+                    btnImprimir.disabled = false; 
                 }
-
-                areaBalanco.classList.remove('imprimir-balanco-ativo');
-                areaAgenda.classList.add('imprimir-agenda-ativa');
-
-                
-                setTimeout(() => {
-                    window.print();
-                }, 150);
-
             } catch (err) {
-                
-                alert("Erro ao buscar dados da agenda.");
+                console.error(err);
+                tbodyPrevia.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar dados do servidor.</td></tr>`;
             } finally {
-                desligarCarregando(); 
+                desligarCarregando();
             }
+        }
+
+        function imprimirRelatorioDiario() {
+            const areaAgenda = document.getElementById('print-report-area');
+            const areaBalanco = document.getElementById('print-balanco-area');
+
+            areaBalanco.classList.remove('imprimir-balanco-ativo');
+            areaAgenda.classList.add('imprimir-agenda-ativa');
+
+            setTimeout(() => {
+                window.print();
+            }, 150);
         }
 
         buscarLaboratoriosDoBanco();
