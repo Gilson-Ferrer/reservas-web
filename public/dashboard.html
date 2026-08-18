@@ -209,6 +209,7 @@
             try {
                 ligarCarregando();
 
+                // 1. Busca todos os laboratórios (1 requisição)
                 const resLabs = await fetch('/api/laboratorios', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -220,40 +221,46 @@
                 selecaoAtual = { lab: null, blocos: [] };
                 atualizarBotaoSubmit();
 
+                // ==========================================
+                // 🔥 A GRANDE MÁGICA DE PERFORMANCE AQUI 🔥
+                // Busca TODA a agenda de TODOS os laboratórios em APENAS 1 requisição
+                // ==========================================
                 let ocupacoesPorLab = {};
-                for (const lab of listaLabs) {
-                    try {
-                        const resDisp = await fetch(`/api/agendamentos/disponibilidade?lab=${encodeURIComponent(lab.nome)}&data=${dataEscolhida}`, {
-                            method: 'GET',
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-                        const resultDisp = await resDisp.json();
-                        ocupacoesPorLab[lab.nome] = resultDisp.success ? resultDisp.ocupacoes : [];
-                    } catch (e) {
-                        console.warn(`Aviso: Não foi possível carregar a agenda do ${lab.nome}`, e);
-                        ocupacoesPorLab[lab.nome] = [];
+                const resDispDia = await fetch(`/api/agendamentos/disponibilidade-dia?data=${dataEscolhida}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (resDispDia.ok) {
+                    const resultDispDia = await resDispDia.json();
+                    if (resultDispDia.success) {
+                        ocupacoesPorLab = resultDispDia.ocupacoes; // Recebe o objeto agrupado do Backend
                     }
                 }
-
+                // ==========================================
 
                 wrapperGrade.classList.remove('hidden');
                 matrixTableBody.innerHTML = listaLabs.map(lab => {
+                    // Pega as ocupações daquele lab específico (ou array vazio se não tiver)
                     const ocupacoes = ocupacoesPorLab[lab.nome] || [];
 
                     const colunasHtml = blocosHorarios.map(bloco => {
-                        const estaOcupado = ocupacoes.some(oc => {
-                            return (bloco.inicio >= oc.inicio && bloco.fim <= oc.fim);
-                        });
+                        // Verifica se este bloco específico está ocupado
+                        const ocupacao = ocupacoes.find(oc => (bloco.inicio >= oc.inicio && bloco.fim <= oc.fim));
 
-                        if (estaOcupado) {
+                        if (ocupacao) {
+                            // Extrai o nome do professor de forma segura
+                            const nomeProfessor = ocupacao.prof || 'Docente';
+                            const partesNome = nomeProfessor.trim().split(' ');
+                            const nomeExibicao = partesNome.length > 1 ? `${partesNome[0]} ${partesNome[partesNome.length - 1]}` : partesNome[0];
+
                             return `
                                 <td class="p-2 text-center">
-                                    <div class="bg-red-50 border border-red-200 text-red-700 font-semibold rounded py-2 cursor-not-allowed text-[10px]" title="Já reservado por outro docente">
-                                        <i class="fa-solid fa-ban"></i> Ocupado
+                                    <div class="bg-red-50 border border-red-200 text-red-700 font-semibold rounded py-2 cursor-not-allowed text-[10px]" title="Reservado por ${nomeProfessor}">
+                                        <i class="fa-solid fa-lock text-red-500 mr-1"></i> ${nomeExibicao}
                                     </div>
                                 </td>`;
                         } else {
-
                             return `
                                 <td class="p-2 text-center">
                                     <button type="button" 

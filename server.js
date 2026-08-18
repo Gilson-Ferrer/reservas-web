@@ -508,6 +508,52 @@ fastify.put('/api/laboratorios/remover/:id', { preHandler: [validarToken] }, asy
 });
 
 /* ==================================
+   BUSCAR DISPONIBILIDADE DO DIA INTEIRO (BATCH)
+   ==================================*/
+fastify.get('/api/agendamentos/disponibilidade-dia', { preHandler: [validarToken] }, async (request, reply) => {
+    const { data } = request.query;
+    const unidadeId = request.user.unidadeId || request.user.UNIDADE_ID || 1;
+
+    if (!data) return reply.status(400).send({ success: false, message: "Data não fornecida." });
+
+    let connection;
+    try {
+        connection = await getDbConnection();
+
+        const sql = `
+            SELECT LABORATORIO_NOME, HORARIO_INICIO, HORARIO_FIM, u.NOME AS PROFESSOR
+            FROM SISRESERVA_AGENDAMENTOS a
+            LEFT JOIN SISRESERVA_USUARIOS u ON a.USUARIO_ID = u.USUARIO_ID
+            WHERE a.UNIDADE_ID = :unidadeId
+              AND a.DATA_AGENDAMENTO = TO_DATE(:data, 'YYYY-MM-DD')
+        `;
+
+        const result = await connection.execute(sql, { unidadeId, data });
+
+        const ocupacoesAgrupadas = {};
+        
+        result.rows.forEach(row => {
+            const lab = row.LABORATORIO_NOME;
+            if (!ocupacoesAgrupadas[lab]) {
+                ocupacoesAgrupadas[lab] = [];
+            }
+            ocupacoesAgrupadas[lab].push({
+                inicio: row.HORARIO_INICIO,
+                fim: row.HORARIO_FIM,
+                prof: row.PROFESSOR
+            });
+        });
+
+        return { success: true, ocupacoes: ocupacoesAgrupadas };
+    } catch (err) {
+        console.error("Erro ao buscar grade do dia:", err.message);
+        return reply.status(500).send({ success: false, message: "Erro interno." });
+    } finally {
+        if (connection) await connection.close();
+    }
+});
+
+/* ==================================
    RELATÓRIO DE RESERVAS POR DATA 
    ==================================*/
 fastify.get('/api/admin/agendamentos-hoje', { preHandler: [validarToken] }, async (request, reply) => {
