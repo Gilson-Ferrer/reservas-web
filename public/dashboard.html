@@ -220,25 +220,21 @@
                 selecaoAtual = { lab: null, blocos: [] };
                 atualizarBotaoSubmit();
 
-                const promessasDeBusca = listaLabs.map(async (lab) => {
+                let ocupacoesPorLab = {};
+                for (const lab of listaLabs) {
                     try {
                         const resDisp = await fetch(`/api/agendamentos/disponibilidade?lab=${encodeURIComponent(lab.nome)}&data=${dataEscolhida}`, {
                             method: 'GET',
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
                         const resultDisp = await resDisp.json();
-                        return { labNome: lab.nome, ocupacoes: resultDisp.success ? resultDisp.ocupacoes : [] };
+                        ocupacoesPorLab[lab.nome] = resultDisp.success ? resultDisp.ocupacoes : [];
                     } catch (e) {
-                        return { labNome: lab.nome, ocupacoes: [] };
+                        console.warn(`Aviso: Não foi possível carregar a agenda do ${lab.nome}`, e);
+                        ocupacoesPorLab[lab.nome] = [];
                     }
-                });
+                }
 
-                const resultadosOcupacoes = await Promise.all(promessasDeBusca);
-
-                let ocupacoesPorLab = {};
-                resultadosOcupacoes.forEach(item => {
-                    ocupacoesPorLab[item.labNome] = item.ocupacoes;
-                });
 
                 wrapperGrade.classList.remove('hidden');
                 matrixTableBody.innerHTML = listaLabs.map(lab => {
@@ -257,11 +253,12 @@
                                     </div>
                                 </td>`;
                         } else {
+
                             return `
                                 <td class="p-2 text-center">
                                     <button type="button" 
                                         onclick="alternarSelecaoBloco('${lab.nome}', ${bloco.id})"
-                                        id="btn-cell-${btoa(lab.nome).replace(/=/g,'')}-${blmoId(bloco.id)}"
+                                        id="btn-cell-${btoa(encodeURIComponent(lab.nome)).replace(/=/g,'')}-${blmoId(bloco.id)}"
                                         class="w-full bg-white border border-gray-200 text-gray-700 py-2 rounded hover:bg-gray-50 font-medium transition cursor-pointer text-center block">
                                         Livre
                                     </button>
