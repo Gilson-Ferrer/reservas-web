@@ -241,15 +241,15 @@
 
                 wrapperGrade.classList.remove('hidden');
                 matrixTableBody.innerHTML = listaLabs.map(lab => {
-                    // Pega as ocupações daquele lab específico (ou array vazio se não tiver)
+
                     const ocupacoes = ocupacoesPorLab[lab.nome] || [];
 
                     const colunasHtml = blocosHorarios.map(bloco => {
-                        // Verifica se este bloco específico está ocupado
+
                         const ocupacao = ocupacoes.find(oc => (bloco.inicio >= oc.inicio && bloco.fim <= oc.fim));
 
                         if (ocupacao) {
-                            // Extrai o nome do professor de forma segura
+
                             const nomeProfessor = ocupacao.prof || 'Docente';
                             const partesNome = nomeProfessor.trim().split(' ');
                             const nomeExibicao = partesNome.length > 1 ? `${partesNome[0]} ${partesNome[partesNome.length - 1]}` : partesNome[0];
@@ -290,7 +290,7 @@
         function blmoId(id) { return id; }
 
         function alternarSelecaoBloco(labNome, blocoId) {
-            const idBotao = `btn-cell-${btoa(labNome).replace(/=/g,'')}-${blocoId}`;
+            const idBotao = `btn-cell-${btoa(encodeURIComponent(labNome)).replace(/=/g,'')}-${blocoId}`;
             const botao = document.getElementById(idBotao);
 
             if (selecaoAtual.lab && selecaoAtual.lab !== labNome) {
